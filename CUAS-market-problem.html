@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CUAS — Market Problem</title>
+<style>
+*{box-sizing:border-box}
+.ttg-problem{margin:0;background:#F0EFED;font-family:Arial,Helvetica,sans-serif;color:#1A1A1A;-webkit-font-smoothing:antialiased}
+.ttg-problem a{color:#8E6733;text-decoration:none}
+.ttg-problem a:hover{color:#C8975A}
+.ttg-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.ttg-card{background:#FFFFFF;border:1px solid #D8D8D6;border-radius:4px;padding:22px;transition:box-shadow 120ms}
+.ttg-card:hover{box-shadow:0 2px 4px rgba(26,26,26,0.08),0 0 0 1px rgba(26,26,26,0.04)}
+.ttg-card{text-align:center;display:flex;flex-direction:column;align-items:center}
+.ttg-card h3{font-weight:600;font-size:15px;color:#1A1A1A;margin:16px 0 6px}
+.ttg-card p{color:#3E3E3E;font-size:13px;line-height:1.5;margin:0}
+.ttg-closer{display:flex;align-items:center;gap:20px;margin-top:56px}
+.ttg-closer-rule{flex:1;height:1px;background:#D8D8D6}
+.ttg-closer-text{font-family:Arial,'Arial Black',sans-serif;font-weight:900;color:#C8975A;font-size:clamp(24px,3vw,34px);text-transform:uppercase;letter-spacing:-.01em;text-align:center}
+@media(max-width:1000px){.ttg-cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.ttg-cards{grid-template-columns:1fr}.ttg-closer{flex-direction:column;gap:16px}.ttg-closer-rule{width:40px;flex:none}}
+</style>
+</head>
+<body>
+
+<section id="problem" class="ttg-problem" style="position:relative;overflow:hidden;">
+  <svg viewBox="0 0 600 600" style="position:absolute;top:-60px;right:-80px;width:520px;height:520px;opacity:.06;pointer-events:none;" fill="none" stroke="#1A1A1A" stroke-width="1"><circle cx="300" cy="300" r="90"></circle><circle cx="300" cy="300" r="170"></circle><circle cx="300" cy="300" r="250"></circle><line x1="300" y1="0" x2="300" y2="600"></line><line x1="0" y1="300" x2="600" y2="300"></line><line x1="60" y1="60" x2="540" y2="540"></line><line x1="540" y1="60" x2="60" y2="540"></line></svg>
+  <div style="max-width:1200px;margin:0 auto;padding:88px 24px;position:relative;">
+    <div class="ttg-cards">
+      <div class="ttg-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C8975A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8h18z"></path><path d="M4 8v11h16V8"></path><path d="M6 19V11"></path><path d="M10 19V11"></path><path d="M14 19V11"></path><path d="M18 19V11"></path><path d="M3 21h18"></path></svg>
+        <h3>Regulatory complexity</h3>
+        <p>Navigating the regulatory landscape, capitalizing on policy, and receiving approvals.</p>
+      </div>
+      <div class="ttg-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C8975A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+        <h3>Dynamic risk profile</h3>
+        <p>Your risk profile dictates your program need. No two organizations are the same.</p>
+      </div>
+      <div class="ttg-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C8975A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path></svg>
+        <h3>A Complex Vendor Space</h3>
+        <p>Dozens of vendors, wide pricing ranges, new entrants, & capability claims that outrun field performance.</p>
+      </div>
+      <div class="ttg-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C8975A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><rect x="7" y="12" width="3" height="6"></rect><rect x="12" y="8" width="3" height="10"></rect><rect x="17" y="14" width="3" height="4"></rect></svg>
+        <h3>Unreliable validation data</h3>
+        <p>Vendor performance numbers are usually collected in a controlled environment and rarely mirror field performance.</p>
+      </div>
+      <div class="ttg-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C8975A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.4" fill="#C8975A" stroke="none"></circle></svg>
+        <h3>Bad investment targets</h3>
+        <p>Get any of this wrong and the result is a program that doesn't fit the threat it was built to mitigate.</p>
+      </div>
+    </div>
+
+    <div class="ttg-closer">
+      <div class="ttg-closer-rule"></div>
+      <div class="ttg-closer-text">Tactien exists to replace opinion with evidence</div>
+      <div class="ttg-closer-rule"></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
