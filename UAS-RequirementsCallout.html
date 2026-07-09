@@ -1,0 +1,25 @@
+<!-- Tactien — Handoff Callout Band (responsive) -->
+<div class="ttg-handoff" style="font-family:'Roboto',Arial,sans-serif; max-width:1200px; margin:0 auto;">
+  <style>
+    @font-face { font-family:"Almoni"; src:url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight:800 900; font-display:swap; }
+    .ttg-handoff .ttg-band { display:flex; gap:18px; align-items:flex-start; background:#1A1A1A; padding:32px 36px; border-radius:2px; }
+    .ttg-handoff .ttg-icon { flex:none; color:#C8975A; padding-top:2px; }
+    .ttg-handoff .ttg-icon [data-lucide] { width:20px; height:20px; }
+    .ttg-handoff .ttg-text { font-family:'Almoni','Arial Black',sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(18px,4.5vw,26px); line-height:1.2; letter-spacing:.005em; color:#fff; margin:0; max-width:44ch; }
+
+    /* Phone */
+    @media (max-width:560px) {
+      .ttg-handoff .ttg-band { gap:12px; padding:22px 20px; border-left:2px solid #C8975A; }
+      .ttg-handoff .ttg-icon { padding-top:1px; }
+      .ttg-handoff .ttg-icon [data-lucide] { width:16px; height:16px; }
+    }
+  </style>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <div class="ttg-band">
+    <span class="ttg-icon"><i data-lucide="git-commit-horizontal"></i></span>
+    <p class="ttg-text">Requirements, validation, testing, and analysis aren't steps toward a recommendation. They're steps toward a <span style="color:#C8975A;">handoff.</span></p>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</div>
