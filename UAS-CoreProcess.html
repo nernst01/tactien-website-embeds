@@ -1,0 +1,56 @@
+<!-- Tactien — Core Process (5 phases, responsive) -->
+<div class="ttg-core" style="font-family:'Roboto',Arial,sans-serif; max-width:1200px; margin:0 auto;">
+  <style>
+    @font-face { font-family:"Almoni"; src:url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight:800 900; font-display:swap; }
+    .ttg-core .ttg-grid { display:grid; grid-template-columns:repeat(5,1fr); border-top:1px solid #1A1A1A; }
+    .ttg-core .ttg-cell { padding:28px 22px 32px; border-right:1px solid #D8D8D6; text-align:center; }
+    .ttg-core .ttg-cell:last-child { border-right:none; }
+    .ttg-core .ttg-num { font-family:'Almoni','Arial Black',sans-serif; font-weight:900; font-size:20px; letter-spacing:.06em; color:#C8975A; margin-bottom:18px; }
+    .ttg-core .ttg-title { font-family:'Almoni','Arial Black',sans-serif; font-weight:900; text-transform:uppercase; font-size:17px; letter-spacing:.01em; line-height:1.12; color:#1A1A1A; margin:0 0 14px; min-height:38px; }
+    .ttg-core .ttg-body { font-size:15.5px; line-height:1.55; color:#3E3E3E; margin:0; }
+
+    /* Tablet: 2 columns */
+    @media (max-width:900px) {
+      .ttg-core .ttg-grid { grid-template-columns:repeat(2,1fr); }
+      .ttg-core .ttg-cell { padding:26px 18px 30px; border-right:1px solid #D8D8D6; }
+      .ttg-core .ttg-cell:nth-child(2n) { border-right:none; }
+      .ttg-core .ttg-cell:nth-child(n+3) { border-top:1px solid #D8D8D6; }
+      .ttg-core .ttg-title { min-height:0; }
+    }
+
+    /* Phone: 1 column */
+    @media (max-width:560px) {
+      .ttg-core .ttg-grid { grid-template-columns:1fr; }
+      .ttg-core .ttg-cell { padding:24px 14px; border-right:none; }
+      .ttg-core .ttg-cell:nth-child(n+2) { border-top:1px solid #D8D8D6; }
+    }
+  </style>
+
+  <div class="ttg-grid">
+    <div class="ttg-cell">
+      <div class="ttg-num">01</div>
+      <h3 class="ttg-title">Requirements Gathering</h3>
+      <p class="ttg-body">Define operational goals, technical criteria, integration needs, and management models before anything else is decided.</p>
+    </div>
+    <div class="ttg-cell">
+      <div class="ttg-num">02</div>
+      <h3 class="ttg-title">OEM &amp; Aircraft Validation</h3>
+      <p class="ttg-body">Background checks on manufacturers, scrutiny of aircraft specs, and assessment of regulatory compliance — reliability, support, lifecycle cost, and interoperability tested against claims, not marketing.</p>
+    </div>
+    <div class="ttg-cell">
+      <div class="ttg-num">03</div>
+      <h3 class="ttg-title">Test-Flight Observation</h3>
+      <p class="ttg-body">Live flight operations run against Tactien-derived test cards, not vendor-preferred demonstrations. Blind testing and randomized missions expose what a controlled demo won't.</p>
+    </div>
+    <div class="ttg-cell">
+      <div class="ttg-num">04</div>
+      <h3 class="ttg-title">Data-Driven Analysis</h3>
+      <p class="ttg-body">Telemetry, operational data, and flight logs cross-referenced against the prescribed test conditions — not just what the vendor reports back.</p>
+    </div>
+    <div class="ttg-cell">
+      <div class="ttg-num">05</div>
+      <h3 class="ttg-title">Recommendation &amp; Handoff</h3>
+      <p class="ttg-body">Findings compile into a clear, actionable report — but the phase ends when your team can operate what's been validated, without Tactien in the loop.</p>
+    </div>
+  </div>
+</div>

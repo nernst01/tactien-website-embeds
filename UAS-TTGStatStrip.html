@@ -1,0 +1,48 @@
+<!-- Tactien — Stat Strip (responsive) -->
+<section class="ttg-stats" style="background:transparent; padding:0 24px; font-family:'Roboto',Arial,sans-serif;">
+  <style>
+    @font-face { font-family:"Almoni"; src:url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight:800 900; font-display:swap; }
+    .ttg-stats .ttg-grid { max-width:1200px; margin:0 auto; border-top:1px solid rgba(0,0,0,.12); display:grid; grid-template-columns:repeat(4,1fr); }
+    .ttg-stats .ttg-cell { padding:34px 26px 40px; border-right:1px solid rgba(0,0,0,.12); text-align:center; }
+    .ttg-stats .ttg-val { font-family:'Almoni','Arial Black',sans-serif; font-weight:900; font-size:46px; line-height:1; color:#C8975A; }
+    .ttg-stats .ttg-label { font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#1A1A1A; margin-top:12px; line-height:1.4; }
+
+    /* Tablet: 2 columns */
+    @media (max-width:768px) {
+      .ttg-stats { padding:0 20px; }
+      .ttg-stats .ttg-grid { grid-template-columns:repeat(2,1fr); }
+      .ttg-stats .ttg-cell { padding:28px 18px 30px; }
+      /* remove right border on last cell of each row */
+      .ttg-stats .ttg-cell:nth-child(2n) { border-right:none; }
+      /* hairline between the two rows */
+      .ttg-stats .ttg-cell:nth-child(n+3) { border-top:1px solid rgba(0,0,0,.12); }
+    }
+
+    /* Phone: 1 column */
+    @media (max-width:480px) {
+      .ttg-stats .ttg-grid { grid-template-columns:1fr; }
+      .ttg-stats .ttg-cell { padding:24px 12px; border-right:none; border-top:1px solid rgba(0,0,0,.12); }
+      .ttg-stats .ttg-cell:first-child { border-top:none; }
+      .ttg-stats .ttg-val { font-size:40px; }
+    }
+  </style>
+
+  <div class="ttg-grid">
+    <div class="ttg-cell">
+      <div class="ttg-val">170+</div>
+      <div class="ttg-label">Years combined team experience</div>
+    </div>
+    <div class="ttg-cell">
+      <div class="ttg-val">165k+</div>
+      <div class="ttg-label">Missions commanded</div>
+    </div>
+    <div class="ttg-cell">
+      <div class="ttg-val">1&ndash;4</div>
+      <div class="ttg-label">UAS Group experience</div>
+    </div>
+    <div class="ttg-cell">
+      <div class="ttg-val">14</div>
+      <div class="ttg-label">Manned aircraft classes</div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,421 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tactien · Orbital Sphere</title>
+
+<!-- ============================================================
+     Wix-ready, self-contained.
+     A slowly-rotating 3D sphere of capability signals with a
+     counter-rotating 3D brain at its center (with a subtle,
+     randomly-timed chromatic-aberration glitch).
+
+     ░░░ HOW TO EDIT THE SIGNAL LIST ░░░
+     Scroll to the SIGNALS array (inside the <script type="text/babel">
+     block below). Each item is one line. To add a new word, just
+     insert another line. To remove a word, delete its line. The
+     sphere automatically redistributes everything evenly.
+
+     Drop this entire file into a Wix HTML Embed (Code mode).
+     Suggested iframe size: full width × ~720px tall (16:10 aspect).
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ttg-gold:      #C8975A;
+    --ttg-gold-ink:  #8E6733;
+    --ttg-offwhite:  #E8DECD;
+    --font-body:     "Roboto", Arial, "Helvetica Neue", sans-serif;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    background: #080808;
+    font-family: var(--font-body);
+    color: var(--ttg-offwhite);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  #root { width: 100vw; height: 100vh; }
+</style>
+
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  SIGNALS                                                         ║
+// ║  Edit this list to add/remove capability words.                  ║
+// ║  Each line is one signal. Add a new line to add a new word.      ║
+// ║  Order doesn't matter — the sphere redistributes evenly.         ║
+// ╚══════════════════════════════════════════════════════════════════╝
+const SIGNALS = [
+  'Use Case Development',
+  'Regulatory Support',
+  'Contractor Vetting',
+  'Manned Aircraft',
+  'Aviation Strategy',
+  'Special Flight Operations',
+  'Industry Intelligence',
+  'Unmanned Aircraft',
+  'System of Systems Integration',
+  'Industry Advisors',
+  'Flight Op Training',
+  'Hardware Vetting',
+  'RFP Development',
+  'Safety Management Systems',
+  'Software Vetting',
+  'Aircraft Selection',
+  'BVLOS',
+  'Data Integration',
+  'Standard Operating Procedures',
+  'Leadership Development',
+  'Industry Awareness',
+  'Technology Vetting',
+  'Contractor Onboarding',
+  'Use Case Validation',
+  'Part 91',
+  '44807',
+];
+
+// ─── Scene geometry ────────────────────────────────────────────────
+// 16:10-ish viewBox gives generous horizontal room so labels never
+// clip when rotating around the sides of the globe.
+const Vw = 1100, Vh = 720;
+const Cx = Vw / 2, Cy = Vh / 2;
+const SPHERE_RADIUS = 280;
+const SPHERE_PERIOD = 40; // seconds per full rotation
+
+// ─── Brain config (counter-rotating in the center) ─────────────────
+const BRAIN_SCALE = 132;
+const BRAIN_SPEED_MULT = -1.55;
+const BRAIN_LOBES = [
+  // [cx, cy, cz, rx, ry, rz, pointCount]   (y up, z toward viewer)
+  [-0.28, 0.10,  0.00, 0.40, 0.55, 0.65, 52],  // left hemisphere
+  [ 0.28, 0.10,  0.00, 0.40, 0.55, 0.65, 52],  // right hemisphere
+  [ 0.00,-0.42, -0.30, 0.35, 0.22, 0.30, 26],  // cerebellum
+  [ 0.00,-0.65, -0.08, 0.08, 0.20, 0.12,  6],  // brainstem stub
+];
+
+const { useState, useEffect, useMemo } = React;
+
+// rAF-driven clock (seconds since mount).
+function useTime() {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const tick = (now) => { setT((now - start) / 1000); raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return t;
+}
+
+// Fibonacci sphere — pole-free distribution (no item ever lands on N/S poles).
+function fibonacciSphere(N) {
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    const y = 1 - (2 * (i + 0.5)) / N;       // (-1, +1) exclusive
+    const r = Math.sqrt(1 - y * y);
+    const theta = golden * i;
+    pts.push({ x0: Math.cos(theta) * r, y0: y, z0: Math.sin(theta) * r });
+  }
+  return pts;
+}
+
+// Rotate a point around the Y (vertical) axis by angle a.
+function rotY(p, a) {
+  const c = Math.cos(a), s = Math.sin(a);
+  return { x: p.x0 * c + p.z0 * s, y: p.y0, z: -p.x0 * s + p.z0 * c };
+}
+
+// ─── Brain geometry: deterministic point cloud + nearest-neighbor wireframe.
+function makeBrainGeometry() {
+  let seed = 31337;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const points = [];
+  BRAIN_LOBES.forEach(([cx, cy, cz, rx, ry, rz, count]) => {
+    for (let i = 0; i < count; i++) {
+      const theta = rand() * Math.PI;
+      const phi = rand() * Math.PI * 2;
+      const radial = 0.84 + rand() * 0.16;
+      points.push({
+        x0: cx + Math.sin(theta) * Math.cos(phi) * rx * radial,
+        y0: cy + Math.cos(theta) * ry * radial,
+        z0: cz + Math.sin(theta) * Math.sin(phi) * rz * radial,
+      });
+    }
+  });
+  const connections = [];
+  const THRESHOLD = 0.22;
+  points.forEach((p1, i) => {
+    const dists = [];
+    points.forEach((p2, j) => {
+      if (j <= i) return;
+      const dx = p1.x0 - p2.x0, dy = p1.y0 - p2.y0, dz = p1.z0 - p2.z0;
+      const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (d < THRESHOLD) dists.push({ j, d });
+    });
+    dists.sort((a, b) => a.d - b.d);
+    for (let k = 0; k < 2 && k < dists.length; k++) {
+      connections.push([i, dists[k].j]);
+    }
+  });
+  return { points, connections };
+}
+
+function Brain({ rot, glitchActive, glitchSeed }) {
+  const { points, connections } = useMemo(() => makeBrainGeometry(), []);
+  const projected = points.map((p) => {
+    const r = rotY(p, rot);
+    return { sx: Cx + r.x * BRAIN_SCALE, sy: Cy - r.y * BRAIN_SCALE, z: r.z };
+  });
+  const renderPass = (dx, dy, color, opacityMul = 1, key = 'main') => (
+    <g key={key} opacity={opacityMul}>
+      {connections.map(([i, j], idx) => {
+        const a = projected[i], b = projected[j];
+        const avgZ = (a.z + b.z) / 2;
+        const op = avgZ > 0 ? 0.4 + avgZ * 0.35 : 0.05 + (avgZ + 1) * 0.12;
+        return (
+          <line key={`bl-${idx}`}
+            x1={a.sx + dx} y1={a.sy + dy} x2={b.sx + dx} y2={b.sy + dy}
+            stroke={color} strokeWidth="0.55" opacity={op} />
+        );
+      })}
+      {projected.map((p, i) => {
+        const front = (p.z + 1) / 2;
+        const op = p.z > 0 ? 0.65 + front * 0.35 : 0.18 + front * 0.22;
+        const r = 0.9 + front * 1.2;
+        return (
+          <circle key={`bp-${i}`}
+            cx={p.sx + dx} cy={p.sy + dy} r={r}
+            fill={color} opacity={op} />
+        );
+      })}
+    </g>
+  );
+  const offX = (glitchSeed * 7) % 6 - 3;
+  const offY = (glitchSeed * 13) % 4 - 2;
+  return (
+    <g>
+      {glitchActive && (
+        <>
+          {renderPass(-3 + offX, offY, '#FF5A5A', 0.55, 'r')}
+          {renderPass( 3 - offX, -offY, '#5AE0DC', 0.55, 'c')}
+        </>
+      )}
+      {renderPass(0, 0, 'var(--ttg-gold)', 1)}
+    </g>
+  );
+}
+
+// ─── Main sphere ────────────────────────────────────────────────────
+function OrbitalSphere() {
+  const t = useTime();
+  const rot = ((t % SPHERE_PERIOD) / SPHERE_PERIOD) * Math.PI * 2;
+
+  // Glitch scheduling — fires every 1.8–5.8s for 90–230ms.
+  const [glitch, setGlitch] = useState({ active: false, seed: 0 });
+  useEffect(() => {
+    let toOn, toOff;
+    const scheduleNext = () => {
+      const wait = 1800 + Math.random() * 4000;
+      toOn = setTimeout(() => {
+        setGlitch({ active: true, seed: Math.random() });
+        const dur = 90 + Math.random() * 140;
+        toOff = setTimeout(() => {
+          setGlitch({ active: false, seed: 0 });
+          scheduleNext();
+        }, dur);
+      }, wait);
+    };
+    scheduleNext();
+    return () => { clearTimeout(toOn); clearTimeout(toOff); };
+  }, []);
+
+  // Position each signal around the sphere (pole-free Fibonacci).
+  const seeds = useMemo(() => fibonacciSphere(SIGNALS.length), []);
+  const projected = SIGNALS.map((label, i) => {
+    const p = rotY(seeds[i], rot);
+    return {
+      label,
+      x: Cx + p.x * SPHERE_RADIUS,
+      y: Cy - p.y * SPHERE_RADIUS,
+      z: p.z,
+    };
+  });
+  // Z-sort once so all signals render back-to-front in a single pass.
+  projected.sort((a, b) => a.z - b.z);
+
+  // Meridian (front longitude scan line)
+  const meridianPoints = [];
+  const meridianSamples = 60;
+  for (let i = 0; i <= meridianSamples; i++) {
+    const phi = (i / meridianSamples) * Math.PI - Math.PI / 2;
+    meridianPoints.push({ x: Cx, y: Cy - Math.sin(phi) * SPHERE_RADIUS, z: Math.cos(phi) });
+  }
+
+  const makeLat = (latDeg) => {
+    const lat = (latDeg * Math.PI) / 180;
+    const r = Math.cos(lat) * SPHERE_RADIUS;
+    const y = Cy - Math.sin(lat) * SPHERE_RADIUS;
+    return { cx: Cx, cy: y, rx: r, ry: 6 };
+  };
+
+  // Helper for rendering a capability dot + label.
+  // All curves are continuous (no step at z=0) so signals fade smoothly
+  // through the equator instead of popping at the back/front boundary.
+  const renderItem = (it) => {
+    const frontness = (it.z + 1) / 2;                       // 0 (back) → 1 (front)
+    const smooth = frontness * frontness * (3 - 2 * frontness); // smoothstep
+    const opacity = 0.08 + smooth * 0.92;                   // 0.08 → 1.0
+    const dotR = 1.6 + frontness * 2.9;                      // continuous size ramp
+    // Meridian "wake" — soft falloff instead of a hard threshold.
+    const meridianX = Math.abs(it.x - Cx) < 40 ? 1 : 0;
+    const onMeridian = Math.max(0, (it.z - 0.78) / 0.22) * meridianX;
+    const dotColor = onMeridian > 0.5 ? 'var(--ttg-gold)' : 'rgba(232,222,205,0.85)';
+    const labelColor = onMeridian > 0.4 ? 'var(--ttg-gold)' : '#E8DECD';
+    const ang = Math.atan2(it.y - Cy, it.x - Cx);
+    const labelDx = Math.cos(ang) * 8;
+    const labelDy = Math.sin(ang) * 8 + 3;
+    const cosA = Math.cos(ang);
+    const labelAnchor = cosA > 0.2 ? 'start' : cosA < -0.2 ? 'end' : 'middle';
+    return (
+      <g key={`sig-${it.label}`} opacity={opacity}>
+        <circle cx={it.x} cy={it.y} r={dotR} fill={dotColor} />
+        {onMeridian > 0.05 && (
+          <circle cx={it.x} cy={it.y} r={dotR + 6 * onMeridian}
+                  fill="none" stroke="var(--ttg-gold)"
+                  strokeWidth="0.6" opacity={onMeridian * 0.55} />
+        )}
+        <text x={it.x + labelDx} y={it.y + labelDy} textAnchor={labelAnchor}
+              style={{
+                fontFamily: "'Roboto', Arial, sans-serif",
+                fontWeight: 500, fontSize: 16,
+                letterSpacing: '0.04em', textTransform: 'uppercase',
+                fill: labelColor,
+              }}>{it.label}</text>
+      </g>
+    );
+  };
+
+  // Z-sort once so all signals render back-to-front in a single pass.
+  // Single pass with stable keys = React reuses DOM nodes across frames =
+  // no unmount/remount jitter at the back/front boundary.
+  const sorted = [...projected].sort((a, b) => a.z - b.z);
+
+  return (
+    <svg width="100%" height="100%"
+         viewBox={`0 0 ${Vw} ${Vh}`}
+         preserveAspectRatio="xMidYMid meet"
+         style={{ background: '#080808', display: 'block' }}>
+      <defs>
+        <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="rgba(200,151,90,0.18)" />
+          <stop offset="1" stopColor="rgba(200,151,90,0)" />
+        </radialGradient>
+        <radialGradient id="sphereFill" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="rgba(20,20,20,0.0)" />
+          <stop offset="0.7" stopColor="rgba(15,15,15,0.4)" />
+          <stop offset="1" stopColor="rgba(0,0,0,0.85)" />
+        </radialGradient>
+      </defs>
+
+      {/* Ambient outer glow */}
+      <circle cx={Cx} cy={Cy} r={SPHERE_RADIUS + 50} fill="url(#glow)" />
+
+      {/* Sphere body */}
+      <circle cx={Cx} cy={Cy} r={SPHERE_RADIUS}
+              fill="url(#sphereFill)"
+              stroke="rgba(200,151,90,0.45)" strokeWidth="1" />
+
+      {/* Latitude wireframe rings */}
+      {[-60, -30, 0, 30, 60].map((lat, i) => {
+        const m = makeLat(lat);
+        return (
+          <ellipse key={i} cx={m.cx} cy={m.cy} rx={m.rx} ry={m.ry}
+                   fill="none"
+                   stroke="rgba(200,151,90,0.18)" strokeWidth="0.5"
+                   strokeDasharray={lat === 0 ? 'none' : '3 4'} />
+        );
+      })}
+
+      {/* Longitude wireframe (rotates with sphere) */}
+      {[...Array(8)].map((_, k) => {
+        const baseLon = (k / 8) * Math.PI * 2;
+        const samples = 30;
+        const pts = [];
+        for (let i = 0; i <= samples; i++) {
+          const phi = (i / samples) * Math.PI - Math.PI / 2;
+          const p0 = {
+            x0: Math.cos(phi) * Math.cos(baseLon),
+            y0: Math.sin(phi),
+            z0: Math.cos(phi) * Math.sin(baseLon),
+          };
+          const p = rotY(p0, rot);
+          pts.push({ x: Cx + p.x * SPHERE_RADIUS, y: Cy - p.y * SPHERE_RADIUS, z: p.z });
+        }
+        const segs = [];
+        let cur = [];
+        pts.forEach((pt) => {
+          if (pt.z > -0.05) cur.push(pt);
+          else if (cur.length) { segs.push(cur); cur = []; }
+        });
+        if (cur.length) segs.push(cur);
+        return segs.map((seg, si) => (
+          <polyline key={`lon-${k}-${si}`}
+            points={seg.map(p => `${p.x},${p.y}`).join(' ')}
+            fill="none"
+            stroke="rgba(232,222,205,0.1)" strokeWidth="0.5" />
+        ));
+      })}
+
+      {/* Brain (counter-rotating, with occasional glitch) — behind all signals */}
+      <Brain rot={rot * BRAIN_SPEED_MULT}
+             glitchActive={glitch.active} glitchSeed={glitch.seed} />
+
+      {/* All signals in a single z-sorted pass with stable keys.
+          This is what makes the rotation buttery smooth: every signal
+          renders into the same parent <g> across every frame, so React
+          reuses DOM nodes instead of unmounting/remounting at z=0. */}
+      {sorted.map(it => renderItem(it))}
+
+      {/* Scan meridian (front longitude) */}
+      {(() => {
+        const pulse = 0.65 + Math.sin(t * 1.8) * 0.18;
+        return (
+          <polyline
+            points={meridianPoints.map(p => `${p.x},${p.y}`).join(' ')}
+            fill="none"
+            stroke="var(--ttg-gold)" strokeWidth="1.6" opacity={pulse} />
+        );
+      })()}
+
+      {/* Equator highlight */}
+      <line x1={Cx - SPHERE_RADIUS} y1={Cy} x2={Cx + SPHERE_RADIUS} y2={Cy}
+            stroke="rgba(200,151,90,0.35)" strokeWidth="0.5" strokeDasharray="2 3" />
+    </svg>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<OrbitalSphere />);
+</script>
+
+</body>
+</html>

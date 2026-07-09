@@ -1,0 +1,76 @@
+<!-- Tactien — The Full Stack of Advisory (chart + legend, mobile-safe) -->
+<section class="ttg-fs" style="background:#1A1A1A; padding:64px 24px;">
+  <style>
+    @font-face { font-family:"Almoni"; src:url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight:800 900; font-display:swap; }
+    .ttg-fs, .ttg-fs * { box-sizing:border-box; }
+    .ttg-fs { font-family:'Roboto',Arial,sans-serif; }
+    .ttg-fs .ttg-inner { max-width:1200px; margin:0 auto; }
+
+    /* Auto-reflow row: wraps when cards can't hold their min basis */
+    .ttg-fs .ttg-row { display:flex; flex-wrap:wrap; gap:1px; background:rgba(255,255,255,.1); }
+    .ttg-fs .ttg-col { flex:1 1 220px; display:flex; flex-direction:column; padding:26px 22px 28px; border-top:3px solid #C8975A; }
+    .ttg-fs .ttg-num { font-family:'Roboto',monospace; font-size:11px; font-weight:600; letter-spacing:.1em; color:#C8975A; margin-bottom:14px; text-align:center; }
+    .ttg-fs .ttg-title { font-family:'Almoni','Arial Black',sans-serif; font-weight:900; text-transform:uppercase; font-size:17px; line-height:1.1; letter-spacing:.01em; color:#fff; margin:0 0 16px; text-align:center; }
+    .ttg-fs .ttg-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+    .ttg-fs .ttg-list li { font-size:13px; line-height:1.35; color:#D3D2CE; display:flex; gap:9px; align-items:baseline; margin:0; }
+    .ttg-fs .ttg-list li span.dot { flex:none; width:5px; height:5px; background:#C8975A; display:block; margin-top:6px; }
+    .ttg-fs .ttg-legend { margin-top:20px; font-size:12px; letter-spacing:.02em; color:#8f8f8b; display:flex; align-items:center; gap:10px; }
+    .ttg-fs .ttg-legend .ic { flex:none; color:#C8975A; }
+  </style>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <div class="ttg-inner">
+    <div class="ttg-row">
+      <div class="ttg-col" style="background:#1F1F1F;">
+        <div class="ttg-num">01</div>
+        <h3 class="ttg-title">Aviation Program Development</h3>
+        <ul class="ttg-list">
+          <li><span class="dot"></span><span>Strategy &amp; Scaling</span></li>
+          <li><span class="dot"></span><span>Use-Case Development</span></li>
+          <li><span class="dot"></span><span>Regulatory Support</span></li>
+          <li><span class="dot"></span><span>Business Case Analysis</span></li>
+        </ul>
+      </div>
+      <div class="ttg-col" style="background:#222;">
+        <div class="ttg-num">02</div>
+        <h3 class="ttg-title">Ops Enablement</h3>
+        <ul class="ttg-list">
+          <li><span class="dot"></span><span>CONOPS Development</span></li>
+          <li><span class="dot"></span><span>Airspace Development</span></li>
+          <li><span class="dot"></span><span>BVLOS Development</span></li>
+        </ul>
+      </div>
+      <div class="ttg-col" style="background:#252525;">
+        <div class="ttg-num">03</div>
+        <h3 class="ttg-title">Technology &amp; Industry Vetting</h3>
+        <ul class="ttg-list">
+          <li><span class="dot"></span><span>Aircraft / Technology Vetting</span></li>
+          <li><span class="dot"></span><span>Red Teaming / POC Validation</span></li>
+        </ul>
+      </div>
+      <div class="ttg-col" style="background:#282828;">
+        <div class="ttg-num">04</div>
+        <h3 class="ttg-title">Operational Architecture</h3>
+        <ul class="ttg-list">
+          <li><span class="dot"></span><span>Special Flight Operations</span></li>
+          <li><span class="dot"></span><span>Manned &amp; Unmanned Integration</span></li>
+        </ul>
+      </div>
+      <div class="ttg-col" style="background:#2B2B2B;">
+        <div class="ttg-num">05</div>
+        <h3 class="ttg-title">Program Execution</h3>
+        <ul class="ttg-list">
+          <li><span class="dot"></span><span>SMS / SOP Development</span></li>
+          <li><span class="dot"></span><span>RFP Development</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ttg-legend">
+      <span class="ic"><i data-lucide="trending-up" style="width:16px;height:16px;"></i></span>
+      <span>Escalating capability, called on as the program demands it.</span>
+    </div>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</section>
