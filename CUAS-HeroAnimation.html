@@ -1,0 +1,307 @@
+<!--
+  Tactien CUAS Hero — Orbital Sequence
+  Five locked orbital segments (RemoteID -> Acoustic -> EO/IR -> Radar -> Sensor Fusion),
+  crossfaded in a continuous loop, no controls, no pause button.
+
+  Overlay graphics (EO/IR insets, triangle+trail contact marker) are HTML/CSS/JS,
+  layered on top of the baked video, per the same video-carries-motion /
+  HTML-carries-graphics split used on the UAS aircraft hero.
+
+  All seven video sources below are permanently hosted on Wix Media Manager
+  (video.wixstatic.com), ready for the Custom HTML embed on the CUAS page.
+-->
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --near-black: #1A1A1A;
+    --gold: #C8975A;
+    --steel-gray: #727272;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: var(--near-black);
+    overflow: hidden;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  #stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--near-black);
+  }
+  video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--crossfade-ms, 900ms) linear;
+    pointer-events: none;
+  }
+  video.active {
+    opacity: 1;
+  }
+
+  /* ---- Overlay layer ---- */
+  .overlay-wrapper {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* EO/IR inset panels */
+  .eoir-insets {
+    position: absolute;
+    top: 6%;
+    right: 4%;
+    width: 20%;
+    max-width: 260px;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 650ms ease, transform 650ms ease;
+  }
+  .eoir-insets.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .eoir-panel {
+    border: 1px solid var(--gold);
+    background: rgba(26,26,26,0.55);
+    aspect-ratio: 16 / 10;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(0,0,0,0.5);
+  }
+  .eoir-panel .label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: clamp(9px, 1.1vw, 12px);
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    background: linear-gradient(transparent, rgba(0,0,0,0.75) 60%);
+    padding: 10px 6px 4px;
+    text-transform: uppercase;
+    white-space: normal;
+  }
+  .eoir-panel video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 1;
+    transition: none;
+  }
+
+  /* Triangle + trailing flight path contact marker (radar-plot style) */
+  .contact-marker {
+    position: absolute;
+    opacity: 0;
+    transition: opacity 500ms ease;
+  }
+  .contact-marker.show { opacity: 1; }
+  .contact-marker svg {
+    overflow: visible;
+    filter: drop-shadow(0 0 4px rgba(200,151,90,0.6));
+  }
+  .contact-marker .trail-path {
+    stroke: var(--gold);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+    fill: none;
+    opacity: 0.75;
+  }
+  .contact-marker .tri {
+    fill: var(--gold);
+  }
+
+  /* Mobile touch-target safety (no interactive controls here, but keep pattern) */
+  @media (max-width: 640px) {
+    .eoir-insets { top: 4%; right: 3%; width: 34%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <video id="videoA" muted playsinline webkit-playsinline="true" referrerpolicy="unsafe-url"></video>
+  <video id="videoB" muted playsinline webkit-playsinline="true" referrerpolicy="unsafe-url"></video>
+
+  <div class="overlay-wrapper" id="overlayLayer">
+    <!-- EO/IR insets -->
+    <div class="eoir-insets" id="eoirInsets">
+      <div class="eoir-panel">
+        <video id="eoInsetVideo" autoplay muted loop playsinline webkit-playsinline="true" referrerpolicy="unsafe-url"
+          src="https://video.wixstatic.com/video/f27dcb_cc4fbd5173ef43848a8e9bcbde67b4ce/720p/mp4/file.mp4"></video>
+        <div class="label">EO Zoom</div>
+      </div>
+      <div class="eoir-panel ir-mode">
+        <video id="irInsetVideo" autoplay muted loop playsinline webkit-playsinline="true" referrerpolicy="unsafe-url"
+          src="https://video.wixstatic.com/video/f27dcb_bf1c6fc42ba34594b4b6a025c6bdf2f6/720p/mp4/file.mp4"></video>
+        <div class="label">IR Thermal</div>
+      </div>
+    </div>
+
+    <!-- Contact marker (triangle + trailing flight path) -->
+    <div class="contact-marker" id="contactMarker">
+      <svg width="140" height="90" viewBox="0 0 140 90">
+        <path class="trail-path" d="M 4,70 Q 40,55 70,40 Q 95,28 118,18"></path>
+        <polygon class="tri" points="118,10 130,22 106,22"></polygon>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---- CONFIG ----
+  // All pacing, sources, and overlay assignments live here. Nothing else
+  // in this file should need editing for day-to-day content changes.
+  const CONFIG = {
+    crossFadeMs: 900,
+    segments: [
+      {
+        name: 'remoteid',
+        src: 'https://video.wixstatic.com/video/f27dcb_74bb7f4729e5454d85c88be8c2a2e386/720p/mp4/file.mp4',
+        overlay: null
+      },
+      {
+        name: 'acoustic',
+        src: 'https://video.wixstatic.com/video/f27dcb_759b5029c0854759831b0abcc10c22db/720p/mp4/file.mp4',
+        overlay: null
+      },
+      {
+        name: 'eoir',
+        src: 'https://video.wixstatic.com/video/f27dcb_11e54e3e1eb843488d3fdf2b42acb0a0/720p/mp4/file.mp4',
+        overlay: 'eoir'
+      },
+      {
+        name: 'radar',
+        src: 'https://video.wixstatic.com/video/f27dcb_23d4958dab2943eeb139ae980fe497f8/720p/mp4/file.mp4',
+        overlay: 'contact'
+      },
+      {
+        name: 'fusion',
+        src: 'https://video.wixstatic.com/video/f27dcb_8295b991c8204656b00c6f364be3da74/720p/mp4/file.mp4',
+        overlay: 'contact'
+      }
+    ]
+  };
+
+  document.documentElement.style.setProperty('--crossfade-ms', CONFIG.crossFadeMs + 'ms');
+
+  const videoA = document.getElementById('videoA');
+  const videoB = document.getElementById('videoB');
+  const eoirInsets = document.getElementById('eoirInsets');
+  const contactMarker = document.getElementById('contactMarker');
+
+  let current = videoA;
+  let next = videoB;
+  let index = 0;
+  let transitioning = false;
+  let generation = 0; // race guard against stale async callbacks
+
+  function hideAllOverlays() {
+    eoirInsets.classList.remove('show');
+    contactMarker.classList.remove('show');
+  }
+
+  function showOverlayFor(segment) {
+    hideAllOverlays();
+    if (segment.overlay === 'eoir') {
+      eoirInsets.classList.add('show');
+    } else if (segment.overlay === 'contact') {
+      // slight delay so it feels like an acquisition, not an instant snap
+      setTimeout(() => {
+        if (segment === CONFIG.segments[index]) contactMarker.classList.add('show');
+      }, 900);
+    }
+  }
+
+  function loadSegment(videoEl, segIndex) {
+    const seg = CONFIG.segments[segIndex];
+    videoEl.src = seg.src;
+    videoEl.load();
+    return seg;
+  }
+
+  function startCrossfade() {
+    if (transitioning) return;
+    transitioning = true;
+    const myGen = generation;
+
+    const nextIndex = (index + 1) % CONFIG.segments.length;
+    const seg = loadSegment(next, nextIndex);
+
+    const tryPlay = () => {
+      if (myGen !== generation) return;
+      next.play().catch(() => {});
+      next.classList.add('active');
+      current.classList.remove('active');
+      hideAllOverlays();
+
+      setTimeout(() => {
+        if (myGen !== generation) return;
+        current.pause();
+        // swap roles
+        const oldCurrent = current;
+        current = next;
+        next = oldCurrent;
+        index = nextIndex;
+        transitioning = false;
+        showOverlayFor(seg);
+      }, CONFIG.crossFadeMs);
+    };
+
+    if (next.readyState >= 2) {
+      tryPlay();
+    } else {
+      next.addEventListener('loadeddata', tryPlay, { once: true });
+    }
+  }
+
+  function watchForEnd(videoEl) {
+    videoEl.addEventListener('timeupdate', () => {
+      if (videoEl !== current || transitioning) return;
+      if (!isFinite(videoEl.duration)) return;
+      const remaining = videoEl.duration - videoEl.currentTime;
+      if (remaining <= CONFIG.crossFadeMs / 1000) {
+        startCrossfade();
+      }
+    });
+    // Fallback in case timeupdate granularity misses the window
+    videoEl.addEventListener('ended', () => {
+      if (videoEl === current && !transitioning) {
+        startCrossfade();
+      }
+    });
+  }
+
+  watchForEnd(videoA);
+  watchForEnd(videoB);
+
+  // Init
+  const firstSeg = loadSegment(current, 0);
+  current.addEventListener('loadeddata', () => {
+    current.classList.add('active');
+    current.play().catch(() => {});
+    showOverlayFor(firstSeg);
+  }, { once: true });
+})();
+</script>
+
+</body>
+</html>

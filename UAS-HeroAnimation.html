@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tactien Group — UAS Program Hero</title>
+<style>
+  :root {
+    --ttg-gold: #C8975A;
+    --ttg-gold-lt: #C9995E;
+    --ttg-gray: #727272;
+    --ttg-dark: #1A1A1A;
+    --ttg-white: #FFFFFF;
+    --font-heading: 'Almoni', 'Arial Black', sans-serif;
+    --font-body: 'Roboto', Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--ttg-dark);
+    overflow: hidden;
+  }
+
+  /* ============================================================
+     HERO STAGE
+     ============================================================ */
+  .hero-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 480px;
+    background: radial-gradient(ellipse at center, #24211d 0%, #1A1A1A 70%, #0d0d0d 100%);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Faint ambient particle texture, purely decorative, sits behind the video */
+  .hero-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(2px 2px at 15% 25%, rgba(200,151,90,0.35), transparent),
+      radial-gradient(1.5px 1.5px at 80% 15%, rgba(200,151,90,0.25), transparent),
+      radial-gradient(2px 2px at 65% 70%, rgba(200,151,90,0.2), transparent),
+      radial-gradient(1px 1px at 30% 80%, rgba(200,151,90,0.3), transparent),
+      radial-gradient(1.5px 1.5px at 90% 60%, rgba(200,151,90,0.2), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .scene-frame {
+    position: relative;
+    z-index: 2;
+    width: min(92vw, 960px);
+    aspect-ratio: 4 / 3;
+  }
+
+  .aircraft-video {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity var(--crossfade-ms, 900ms) ease;
+  }
+
+  .aircraft-video.is-visible {
+    opacity: 1;
+  }
+
+  /* ============================================================
+     CALLOUT TEXT LAYER
+     Each callout is an absolutely-positioned label that fades
+     in/out on its own timeline, driven by JS below.
+     ============================================================ */
+  .callout-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .callout {
+    position: absolute;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: clamp(0.7rem, 1.4vw, 1rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ttg-white);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 600ms ease, transform 600ms ease;
+    max-width: 46%;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .callout.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Two visual weights, matching the near/far layering used on the
+     existing homepage sphere animation */
+  .callout--near {
+    font-weight: 700;
+    color: var(--ttg-white);
+  }
+
+  .callout--far {
+    font-weight: 300;
+    color: var(--ttg-gray);
+  }
+
+  /* ============================================================
+     OPTIONAL PLAY/PAUSE CONTROL — kept simple, for accessibility
+     and for anyone with reduced-motion who wants to trigger it
+     manually.
+     ============================================================ */
+  .hero-controls {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 3;
+    display: flex;
+    gap: 8px;
+  }
+
+  .hero-controls button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid var(--ttg-gold);
+    color: var(--ttg-gold);
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 200ms ease, color 200ms ease;
+  }
+
+  .hero-controls button svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    display: block;
+  }
+
+  .hero-controls button:hover,
+  .hero-controls button:focus-visible {
+    background: var(--ttg-gold);
+    color: var(--ttg-dark);
+  }
+
+  .hero-controls button:focus-visible {
+    outline: 2px solid var(--ttg-white);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .scene-frame {
+      width: 96vw;
+    }
+
+    .callout {
+      font-size: 0.68rem;
+      max-width: 42%;
+      letter-spacing: 0.05em;
+    }
+
+    /* Bigger touch target on mobile — 44px meets Apple/Google's
+       minimum recommended tap-target size, vs. the tighter 36px
+       used on desktop where a mouse pointer is precise. */
+    .hero-controls button {
+      width: 44px;
+      height: 44px;
+    }
+
+    .hero-controls button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .hero-controls {
+      bottom: 10px;
+      right: 10px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .callout {
+      font-size: 0.62rem;
+      max-width: 44%;
+    }
+  }
+
+  /* Respect iOS/Android's tap highlight suppression for a cleaner
+     touch interaction on the pause button */
+  .hero-controls button {
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero-stage" id="heroStage">
+  <div class="scene-frame">
+    <video
+      class="aircraft-video"
+      id="aircraftVideoA"
+      muted
+      playsinline
+      webkit-playsinline="true"
+      referrerpolicy="unsafe-url"
+      preload="auto"
+    ></video>
+    <video
+      class="aircraft-video"
+      id="aircraftVideoB"
+      muted
+      playsinline
+      webkit-playsinline="true"
+      referrerpolicy="unsafe-url"
+      preload="auto"
+    ></video>
+
+    <div class="callout-layer" id="calloutLayer">
+      <!-- Per-aircraft callout wrappers get created/removed here by JS.
+           We no longer wipe this whole container on every transition —
+           each aircraft gets its own wrapper so outgoing text can
+           finish fading out instead of being destroyed instantly. -->
+    </div>
+
+    <div class="hero-controls">
+      <button id="pauseBtn" type="button" aria-pressed="false" aria-label="Pause">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="3" y="2" width="4" height="12"></rect>
+          <rect x="9" y="2" width="4" height="12"></rect>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   TACTIEN UAS HERO — AIRCRAFT ASSEMBLE / EXPLODE CYCLE
+   ================================================================
+   HOW TO USE THIS FILE
+   --------------------
+   Everything you need to edit lives in the CONFIG object below.
+   You should NOT need to touch anything past the "ENGINE — DO NOT
+   EDIT BELOW THIS LINE" marker to add aircraft, add/remove callout
+   text, or change pacing.
+
+   1) TIMING (applies globally to every aircraft in the cycle)
+      - explodeHoldMs: how long we linger on the fully-exploded
+        end frame before the cross-fade to the next aircraft begins.
+      - crossFadeMs: how long the cross-fade itself takes. This is
+        a TRUE cross-fade — the outgoing aircraft's video fades out
+        WHILE the incoming aircraft's video is already fading in
+        underneath it, so they overlap rather than leaving a gap.
+        Raise this number for a slower, more gradual dissolve;
+        lower it for a snappier cut-like transition.
+      - gapMs: an optional beat of pure dark stage BEFORE the next
+        aircraft starts fading in, inserted after explodeHoldMs and
+        before the cross-fade begins. Set this to 0 if you want the
+        cross-fade to begin immediately with no pause at all.
+
+   2) AIRCRAFT LIST
+      Add one object per aircraft to the `aircraft` array below.
+      - id: internal name, no spaces (used for reference only)
+      - label: human-readable name (not shown on screen, just
+        for your own bookkeeping in this file)
+      - video: the hosted URL of that aircraft's explode-view
+        video (from Higgsfield, or wherever you end up hosting
+        the final files)
+
+   3) CALLOUTS (the editable part you asked for)
+      Each aircraft has a `callouts` array. Each callout is:
+        {
+          text:  "REGULATORY SUPPORT",   // exact text shown
+          start: 1200,                   // ms after this aircraft
+                                          // starts, when it fades in
+          x:     "20%",                  // horizontal position
+          y:     "30%",                  // vertical position
+          weight: "near"                 // "near" (bold/white) or
+                                          // "far" (light/gray) — 
+                                          // matches the two-depth
+                                          // style from the homepage
+                                          // sphere animation
+        }
+
+      Callouts fade IN one at a time, staggered by their own `start`
+      value — but they all fade OUT together, simultaneously, at the
+      same moment the explode-hold ends and the cross-fade to the
+      next aircraft begins. There's no per-callout "end" anymore —
+      you only control when each one appears, not when it leaves.
+
+      To ADD a callout: copy one of the objects in an aircraft's
+      `callouts` array, change the text/start/position, done.
+
+      To REMOVE a callout: delete its object from the array.
+
+      Position (x, y) is measured from the top-left of the hero
+      stage as a percentage — e.g. x: "10%", y: "20%" puts it near
+      the top-left; x: "80%", y: "70%" puts it near the bottom-right.
+      Nudge these by eye once you see it against each aircraft's
+      actual exploded geometry.
+   ================================================================ */
+
+  const CONFIG = {
+    // ---- GLOBAL TIMING ----
+    explodeHoldMs: 350,   // hold time on fully-exploded frame
+    crossFadeMs: 1100,      // cross-fade duration between aircraft
+                           // — this is the "transition speed" dial:
+                           // bigger number = slower/smoother dissolve,
+                           // smaller number = quicker transition
+    gapMs: 0,              // optional dark pause BEFORE the cross-fade
+                           // starts (0 = no pause, cross-fade begins
+                           // immediately after the hold)
+
+    // ---- AIRCRAFT SEQUENCE ----
+    aircraft: [
+      {
+        id: 'cargo-drone',
+        label: 'Heavy-Lift Cargo Drone',
+        video: 'https://video.wixstatic.com/video/f27dcb_bb6bcc2c45c94ed8a87e7e0384b535fe/720p/mp4/file.mp4',
+        callouts: [
+          { text: 'HARDWARE VETTING', start: 900, x: '15%', y: '22%', weight: 'near' },
+          { text: 'USE CASE DEVELOPMENT', start: 1700, x: '70%', y: '20%', weight: 'near' },
+          { text: 'CONTRACTOR VETTING', start: 2500, x: '18%', y: '50%', weight: 'near' },
+          { text: 'SPECIAL FLIGHT OPERATIONS', start: 3300, x: '65%', y: '50%', weight: 'far' },
+          { text: 'DATA ANALYSIS/WORKFLOWS', start: 4100, x: '20%', y: '70%', weight: 'near' },
+          { text: 'SPECIAL PROJECTS', start: 4900, x: '68%', y: '78%', weight: 'near' }
+        ]
+      },
+
+      {
+        id: 'ctol-fixed-wing',
+        label: 'CTOL Fixed-Wing UAS (Group 4)',
+        video: 'https://video.wixstatic.com/video/f27dcb_f9b7a2ddeb8e4d83b5f56490042c1d5c/720p/mp4/file.mp4',
+        callouts: [
+          { text: 'REGULATORY SUPPORT', start: 500, x: '12%', y: '16%', weight: 'far' },
+          { text: 'RFP DEVELOPMENT', start: 1100, x: '73%', y: '18%', weight: 'far' },
+          { text: 'CONTRACTOR ONBOARDING', start: 1700, x: '10%', y: '38%', weight: 'near' },
+          { text: 'POLICY/PROCEDURES', start: 2300, x: '72%', y: '38%', weight: 'near' },
+          { text: 'SMS/SOP DEVELOPMENT', start: 2900, x: '16%', y: '68%', weight: 'near' },
+          { text: 'AIRCRAFT SELECTION', start: 3500, x: '65%', y: '68%', weight: 'far' },
+          { text: 'TECH VETTING', start: 4100, x: '12%', y: '79%', weight: 'far' },
+          { text: 'INDUSTRY AWARENESS', start: 4700, x: '64%', y: '82%', weight: 'near' }
+        ]
+      },
+
+      {
+        id: 'fw-vtol',
+        label: 'FW VTOL UAS',
+        video: 'https://video.wixstatic.com/video/f27dcb_b3bc846c3ffb4a9a8a79754f417f0b17/720p/mp4/file.mp4',
+        callouts: [
+          { text: 'AVIATION STRATEGY', start: 700, x: '12%', y: '18%', weight: 'near' },
+          { text: 'SOFTWARE VETTING', start: 1500, x: '68%', y: '16%', weight: 'near' },
+          { text: 'DATA INTEGRATION', start: 2300, x: '12%', y: '48%', weight: 'near' },
+          { text: 'SYSTEM OF SYSTEMS INTEGRATION', start: 3100, x: '58%', y: '42%', weight: 'far' },
+          { text: 'FLIGHT OP TRAINING', start: 3900, x: '15%', y: '68%', weight: 'far' },
+          { text: 'BVLOS STRATEGY', start: 4700, x: '63%', y: '69%', weight: 'far' },
+          { text: 'BUSINESS CASE ANALYSIS', start: 5500, x: '20%', y: '80%', weight: 'near' }
+        ]
+      },
+
+      {
+        id: 'manned-helicopter',
+        label: 'Manned Helicopter (MD 520N)',
+        video: 'https://video.wixstatic.com/video/f27dcb_8378030d04b14fccb5ea78f59d221fec/720p/mp4/file.mp4',
+        callouts: [
+          { text: 'INDUSTRY INTELLIGENCE', start: 700, x: '12%', y: '18%', weight: 'near' },
+          { text: 'INDUSTRY ADVISORS', start: 1500, x: '68%', y: '16%', weight: 'near' },
+          { text: 'LEADERSHIP DEVELOPMENT', start: 2300, x: '12%', y: '37%', weight: 'near' },
+          { text: 'STAKEHOLDER ENGAGEMENT', start: 3100, x: '58%', y: '37%', weight: 'near' },
+          { text: 'EXECUTIVE EDUCATION', start: 3900, x: '15%', y: '74%', weight: 'near' },
+          { text: 'MANNED/UNMANNED INTEGRATION', start: 4700, x: '65%', y: '58%', weight: 'far' }
+        ]
+      }
+    ]
+  };
+
+  /* ================================================================
+     ENGINE — DO NOT EDIT BELOW THIS LINE
+     ================================================================ */
+
+  const stage = document.getElementById('heroStage');
+  const videoA = document.getElementById('aircraftVideoA');
+  const videoB = document.getElementById('aircraftVideoB');
+  const calloutLayer = document.getElementById('calloutLayer');
+  const pauseBtn = document.getElementById('pauseBtn');
+
+  stage.style.setProperty('--crossfade-ms', CONFIG.crossFadeMs + 'ms');
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Two video slots we alternate between. "active" is on top / visible,
+  // "standby" is the one we preload the next aircraft into just before
+  // the cross-fade starts.
+  let activeVideo = videoA;
+  let standbyVideo = videoB;
+
+  let currentIndex = 0;
+  let generation = 0;          // bumps every time a new aircraft starts;
+                                // lets us ignore any stale tick loop or
+                                // stale callback left over from before
+  let aircraftStartTime = 0;
+  let manuallyPaused = false;
+  let holdTimeoutId = null;
+  let gapTimeoutId = null;
+  let rafId = null;
+  let activeCalloutEls = [];   // callouts belonging to the CURRENT aircraft
+                                // (the ones tickCallouts is allowed to
+                                // fade in / that transitionToNext fades out)
+
+  function buildCalloutsForAircraft(aircraft) {
+    // Each aircraft gets its OWN wrapper div, appended fresh — we do
+    // NOT clear the whole calloutLayer here. That was the bug: wiping
+    // the shared container instantly destroyed the outgoing aircraft's
+    // labels before their fade-out transition could ever render.
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'absolute';
+    wrapper.style.inset = '0';
+
+    const els = aircraft.callouts.map(c => {
+      const el = document.createElement('div');
+      el.className = 'callout callout--' + (c.weight === 'far' ? 'far' : 'near');
+      el.textContent = c.text;
+      el.style.left = c.x;
+      el.style.top = c.y;
+      wrapper.appendChild(el);
+      return { el, start: c.start };
+    });
+
+    calloutLayer.appendChild(wrapper);
+    return { wrapper, els };
+  }
+
+  function tickCallouts(elapsedMs, calloutEls, myGeneration) {
+    if (myGeneration !== generation) return; // a newer aircraft has
+                                              // already started — this
+                                              // loop belongs to the past,
+                                              // stop touching the DOM
+    calloutEls.forEach(({ el, start }) => {
+      // Callouts fade IN individually based on their own start time,
+      // but nothing here ever fades them back OUT — that happens
+      // all together, at once, in transitionToNext() below.
+      if (elapsedMs >= start) {
+        el.classList.add('is-visible');
+      }
+    });
+    if (!manuallyPaused) {
+      rafId = requestAnimationFrame(() => {
+        tickCallouts(performance.now() - aircraftStartTime, calloutEls, myGeneration);
+      });
+    }
+  }
+
+  function playAircraft(index, videoEl) {
+    currentIndex = index;
+    const aircraft = CONFIG.aircraft[index];
+    if (!aircraft || !aircraft.video) return;
+
+    generation += 1;
+    const myGeneration = generation;
+
+    const { wrapper, els } = buildCalloutsForAircraft(aircraft);
+    activeCalloutEls = els;
+
+    videoEl.src = aircraft.video;
+    videoEl.currentTime = 0;
+
+    videoEl.onloadeddata = () => {
+      if (myGeneration !== generation) return; // stale callback, ignore
+
+      // Cross-fade: bring the new video in on top while whatever was
+      // previously active fades out underneath, at the same time.
+      videoEl.classList.add('is-visible');
+      videoEl.play().catch(() => { /* autoplay may be blocked until interaction */ });
+
+      aircraftStartTime = performance.now();
+      cancelAnimationFrame(rafId);
+      tickCallouts(0, els, myGeneration);
+    };
+
+    videoEl.onended = () => {
+      if (myGeneration !== generation) return; // stale callback, ignore
+      if (prefersReducedMotion) return; // hold on last frame, no cycling
+      clearTimeout(holdTimeoutId);
+      holdTimeoutId = setTimeout(() => {
+        if (myGeneration !== generation) return;
+        clearTimeout(gapTimeoutId);
+        gapTimeoutId = setTimeout(() => {
+          if (myGeneration !== generation) return;
+          transitionToNext(wrapper);
+        }, CONFIG.gapMs);
+      }, CONFIG.explodeHoldMs);
+    };
+  }
+
+  function transitionToNext(outgoingWrapper) {
+    const nextIndex = (currentIndex + 1) % CONFIG.aircraft.length;
+
+    // Fade the outgoing aircraft's callouts out — they now have their
+    // own wrapper, so this fade actually gets to play out visually
+    // instead of being destroyed mid-transition.
+    activeCalloutEls.forEach(({ el }) => el.classList.remove('is-visible'));
+
+    // Once the fade-out transition has had time to finish, remove that
+    // wrapper from the DOM entirely so it doesn't pile up.
+    setTimeout(() => {
+      if (outgoingWrapper && outgoingWrapper.parentNode) {
+        outgoingWrapper.parentNode.removeChild(outgoingWrapper);
+      }
+    }, 650); // slightly longer than the .callout CSS fade (600ms)
+
+    // Fade the currently-active video out...
+    activeVideo.classList.remove('is-visible');
+
+    // ...while the standby video fades in with the next aircraft,
+    // starting at the same moment, so the two overlap for the
+    // duration of crossFadeMs instead of leaving a dark gap.
+    playAircraft(nextIndex, standbyVideo);
+
+    // Swap roles for the next cycle.
+    const previousActive = activeVideo;
+    activeVideo = standbyVideo;
+    standbyVideo = previousActive;
+  }
+
+  const ICON_PAUSE = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="4" height="12"></rect><rect x="9" y="2" width="4" height="12"></rect></svg>';
+  const ICON_PLAY = '<svg viewBox="0 0 16 16" aria-hidden="true"><polygon points="4,2 14,8 4,14"></polygon></svg>';
+
+  pauseBtn.addEventListener('click', () => {
+    manuallyPaused = !manuallyPaused;
+    pauseBtn.innerHTML = manuallyPaused ? ICON_PLAY : ICON_PAUSE;
+    pauseBtn.setAttribute('aria-label', manuallyPaused ? 'Play' : 'Pause');
+    pauseBtn.setAttribute('aria-pressed', String(manuallyPaused));
+    if (manuallyPaused) {
+      activeVideo.pause();
+      clearTimeout(holdTimeoutId);
+      clearTimeout(gapTimeoutId);
+      cancelAnimationFrame(rafId);
+    } else {
+      activeVideo.play().catch(() => {});
+      aircraftStartTime = performance.now() - (activeVideo.currentTime * 1000);
+      tickCallouts(performance.now() - aircraftStartTime);
+      if (activeVideo.ended) {
+        holdTimeoutId = setTimeout(() => transitionToNext(null), 200);
+      }
+    }
+  });
+
+  // Kick off the sequence
+  playAircraft(0, activeVideo);
+</script>
+
+</body>
+</html>
