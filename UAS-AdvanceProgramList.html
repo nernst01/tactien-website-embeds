@@ -2,7 +2,9 @@
 <div style="font-family:'Roboto',Arial,sans-serif;">
   <style>
     @font-face { font-family:"Almoni"; src:url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight:800 900; font-display:swap; }
+    html, body { overscroll-behavior: none; touch-action: none; }
   </style>
+  <script>document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });</script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
   <div style="display:flex; flex-direction:column; border-top:1px solid #1A1A1A; max-width:560px;">

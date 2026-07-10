@@ -1,6 +1,7 @@
 <!-- Tactien — Stat Strip (responsive) -->
 <section class="ttg-stats" style="background:transparent; padding:0 24px; font-family:'Roboto',Arial,sans-serif;">
   <style>
+    html, body { overscroll-behavior: none; touch-action: none; }
     @font-face { font-family:"Almoni"; src:url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight:800 900; font-display:swap; }
     .ttg-stats .ttg-grid { max-width:1200px; margin:0 auto; border-top:1px solid rgba(0,0,0,.12); display:grid; grid-template-columns:repeat(4,1fr); }
     .ttg-stats .ttg-cell { padding:34px 26px 40px; border-right:1px solid rgba(0,0,0,.12); text-align:center; }
@@ -45,4 +46,5 @@
       <div class="ttg-label">Manned aircraft classes</div>
     </div>
   </div>
+  <script>document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });</script>
 </section>

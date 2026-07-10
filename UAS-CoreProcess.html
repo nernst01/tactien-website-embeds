@@ -1,6 +1,7 @@
 <!-- Tactien — Core Process (5 phases, responsive) -->
 <div class="ttg-core" style="font-family:'Roboto',Arial,sans-serif; max-width:1200px; margin:0 auto;">
   <style>
+    html, body { overscroll-behavior: none; touch-action: none; }
     @font-face { font-family:"Almoni"; src:url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight:800 900; font-display:swap; }
     .ttg-core .ttg-grid { display:grid; grid-template-columns:repeat(5,1fr); border-top:1px solid #1A1A1A; }
     .ttg-core .ttg-cell { padding:28px 22px 32px; border-right:1px solid #D8D8D6; text-align:center; }
@@ -54,3 +55,4 @@
     </div>
   </div>
 </div>
+<script>document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });</script>

@@ -25,6 +25,8 @@
     padding: 0;
     background: var(--near-black);
     overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
     font-family: 'Helvetica Neue', Arial, sans-serif;
   }
   #stage {
@@ -165,6 +167,9 @@
   </div>
 </div>
 
+<script>
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+</script>
 <script>
 (function () {
   // ---- CONFIG ----

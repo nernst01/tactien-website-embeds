@@ -6,6 +6,7 @@
 <title>CUAS — Market Problem</title>
 <style>
 *{box-sizing:border-box}
+html,body{overscroll-behavior:none;touch-action:none}
 .ttg-problem{margin:0;background:#F0EFED;font-family:Arial,Helvetica,sans-serif;color:#1A1A1A;-webkit-font-smoothing:antialiased}
 .ttg-problem a{color:#8E6733;text-decoration:none}
 .ttg-problem a:hover{color:#C8975A}
@@ -63,5 +64,8 @@
   </div>
 </section>
 
+<script>
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+</script>
 </body>
 </html>

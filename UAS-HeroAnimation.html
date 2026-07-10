@@ -21,8 +21,10 @@
     margin: 0;
     padding: 0;
     height: 100%;
-    background: var(--ttg-dark);
+    background: transparent;
     overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
   }
 
   /* ============================================================
@@ -33,7 +35,7 @@
     width: 100%;
     height: 100%;
     min-height: 480px;
-    background: radial-gradient(ellipse at center, #24211d 0%, #1A1A1A 70%, #0d0d0d 100%);
+    background: transparent;
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -225,6 +227,7 @@
       webkit-playsinline="true"
       referrerpolicy="unsafe-url"
       preload="auto"
+      aria-label="Animated aircraft sequence"
     ></video>
     <video
       class="aircraft-video"
@@ -234,6 +237,7 @@
       webkit-playsinline="true"
       referrerpolicy="unsafe-url"
       preload="auto"
+      aria-label="Animated aircraft sequence"
     ></video>
 
     <div class="callout-layer" id="calloutLayer">
@@ -255,6 +259,11 @@
 </div>
 
 <script>
+/* Prevent this embed's own document from ever scrolling on mobile, so a
+   touch drag that starts inside the iframe falls through to the parent
+   Wix page's scroll instead of getting trapped in this frame. */
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+
 /* ================================================================
    TACTIEN UAS HERO — AIRCRAFT ASSEMBLE / EXPLODE CYCLE
    ================================================================
@@ -484,6 +493,7 @@
 
     videoEl.src = aircraft.video;
     videoEl.currentTime = 0;
+    videoEl.setAttribute('aria-label', aircraft.label + ' — animated aircraft sequence');
 
     videoEl.onloadeddata = () => {
       if (myGeneration !== generation) return; // stale callback, ignore
