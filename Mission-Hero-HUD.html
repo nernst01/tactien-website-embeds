@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tactien · HUD</title>
+
+<!-- ============================================================
+     Wix-ready, self-contained.
+     A live-feeling military HUD: pitch ladder, altitude tape,
+     airspeed tape, heading tape, bank indicator, waypoint cue,
+     target box, with realistic sensor jitter + occasional events.
+
+     ░░░ ADJUSTABLE PARAMETERS ░░░
+     Look for the CONFIG block below — speed, scale, callsign, all
+     the numeric ranges are tweakable from there.
+
+     Drop into a Wix HTML Embed (Code mode), top-right of the
+     Mission hero section. Recommended iframe ratio: square
+     (e.g. 480 × 480 or 560 × 560). Scales fluidly.
+     ============================================================ -->
+
+<style>
+  /* Color palette. Default = Tactien gold; switch to neon green by
+     editing the CSS variables, or override at runtime from CONFIG. */
+  :root {
+    --hud-color:       #C8975A;                       /* primary */
+    --hud-color-dim:   rgba(200, 151, 90, 0.65);      /* derived */
+    --hud-color-fade:  rgba(200, 151, 90, 0.45);      /* derived */
+    --hud-alert:       #FF6464;                       /* TRK/LOCK accent */
+    --hud-bg:          #0A0703;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--hud-bg);
+    font-family: "Courier New", Consolas, ui-monospace, monospace;
+    color: var(--hud-color);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  #root { width: 100vw; height: 100vh; position: relative; }
+
+  /* Subtle scanline + vignette overlay for CRT feel. Pointer-events
+     off so it never blocks anything. */
+  .hud-scanlines {
+    position: absolute; inset: 0; pointer-events: none; z-index: 5;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0) 0,
+        rgba(0,0,0,0) 2px,
+        rgba(0,0,0,0.18) 3px,
+        rgba(0,0,0,0) 4px
+      ),
+      radial-gradient(ellipse at center,
+        rgba(0,0,0,0) 55%,
+        rgba(0,0,0,0.55) 100%);
+    mix-blend-mode: multiply;
+  }
+  .hud-flicker {
+    position: absolute; inset: 0; pointer-events: none; z-index: 6;
+    background: transparent;
+    opacity: 1;
+    animation: hud-flick 4.7s steps(2) infinite;
+  }
+  @keyframes hud-flick {
+    0%, 96%, 100% { opacity: 1; }
+    97%           { opacity: 0.85; }
+    98%           { opacity: 1; }
+  }
+</style>
+
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  CONFIG — edit values here to tune the HUD                       ║
+// ╚══════════════════════════════════════════════════════════════════╝
+const CONFIG = {
+  // ─── Colors ─────────────────────────────────────────────────────
+  // Primary HUD color (lines, text, ticks). Default = Tactien gold.
+  // Try '#6CFF96' for classic phosphor-green, '#FFC247' for amber,
+  // '#7FE0FF' for ice-blue. Hex or any valid CSS color.
+  color:           '#C8975A',
+  // Color the TRK box flips to when it shows "LOCK". Default = red.
+  // Try '#FFC247' for amber, '#FF6464' for red, '#FFFFFF' for white.
+  lockColor:       '#3aeb34',
+
+  callsign:        'TTG-01',              // bottom-left tag
+  mode:            'NAV',                 // bottom-left mode line
+  weapon:          'RDY',                 // weapon status line
+  framePeriod:     90,                    // ms between simulated sensor updates
+  baseAltitude:    800,                  // ft, drifts ±300
+  baseAirspeed:    90,                   // knots, drifts ±25
+  baseHeading:     34,                    // deg, slowly rotates
+  baseMach:        0.78,                  // mach number
+  pitchAmplitude:  4,                     // degrees of pitch oscillation
+  pitchPeriod:     18,                    // seconds per pitch cycle
+  bankAmplitude:   9,                    // degrees of bank oscillation
+  bankPeriod:      18,                     // seconds per bank cycle
+  fontSize:        14,                    // base font size, px
+  fontSizeLarge:   18,                    // for primary readouts (alt, spd)
+  fontSizeSmall:   11,                    // for tape ticks
+};
+
+// Inject CONFIG.color / CONFIG.lockColor into CSS variables so all of
+// the inline styles below pick them up via var(--hud-color). Also
+// compute dimmed/faded derivatives by parsing the hex value.
+function hexToRgba(hex, a) {
+  const h = hex.replace('#', '');
+  const n = h.length === 3
+    ? h.split('').map(c => parseInt(c + c, 16))
+    : [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+  return `rgba(${n[0]}, ${n[1]}, ${n[2]}, ${a})`;
+}
+(function applyColorVars() {
+  const r = document.documentElement.style;
+  r.setProperty('--hud-color',      CONFIG.color);
+  r.setProperty('--hud-color-dim',  hexToRgba(CONFIG.color, 0.65));
+  r.setProperty('--hud-color-fade', hexToRgba(CONFIG.color, 0.45));
+  r.setProperty('--hud-alert',      CONFIG.lockColor);
+})();
+
+// ─── Geometry ───────────────────────────────────────────────────────
+// 1:1 viewBox so the HUD always reads as a square scope.
+const Vw = 600, Vh = 600;
+const Cx = Vw / 2, Cy = Vh / 2;
+
+const { useState, useEffect, useRef, useMemo } = React;
+
+// rAF clock
+function useTime() {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const tick = (now) => { setT((now - start) / 1000); raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return t;
+}
+
+// Quantized sensor — only updates every framePeriod ms so the readouts
+// "tick" like real instruments instead of flowing continuously.
+function useSensor(t) {
+  const lastRef = useRef(0);
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(x => x + 1), CONFIG.framePeriod);
+    return () => clearInterval(id);
+  }, []);
+
+  return useMemo(() => {
+    const jitter = (amp) => (Math.random() - 0.5) * amp;
+    // Smooth sinusoidal drift + small per-tick jitter
+    const pitch    = Math.sin(t / CONFIG.pitchPeriod * Math.PI * 2) * CONFIG.pitchAmplitude + jitter(0.4);
+    const bank     = Math.sin(t / CONFIG.bankPeriod  * Math.PI * 2) * CONFIG.bankAmplitude  + jitter(0.6);
+    const altitude = Math.round(CONFIG.baseAltitude + Math.sin(t * 0.18) * 280 + jitter(8));
+    const airspeed = Math.round(CONFIG.baseAirspeed + Math.sin(t * 0.22) * 22  + jitter(2));
+    const mach     = (CONFIG.baseMach + Math.sin(t * 0.22) * 0.06 + jitter(0.005)).toFixed(2);
+    const heading  = (CONFIG.baseHeading + t * 1.3) % 360;
+    const gforce   = (1 + Math.abs(Math.sin(t / CONFIG.bankPeriod * Math.PI * 2)) * 1.6 + jitter(0.05)).toFixed(1);
+    const aoa      = (3 + Math.sin(t * 0.4) * 2 + jitter(0.1)).toFixed(1);
+    const verticalSpeed = Math.round(Math.cos(t * 0.18) * 250 * 0.18 * 60 + jitter(5));
+    return { pitch, bank, altitude, airspeed, mach, heading, gforce, aoa, verticalSpeed };
+  // include `tick` so the closure re-runs on each sensor tick instead of every rAF frame
+  // (visual smoothness is provided by t-driven SVG transforms below)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick]);
+}
+
+// ─── HUD building blocks ────────────────────────────────────────────
+
+// Pitch ladder — horizontal bars at each 10° mark, scrolling with pitch.
+// Roll-rotates as a group with bank angle.
+function PitchLadder({ pitch, bank }) {
+  const pxPerDeg = 10;
+  const ladderLines = [];
+  for (let deg = -60; deg <= 60; deg += 5) {
+    if (deg === 0) continue; // horizon drawn separately
+    const major = deg % 10 === 0;
+    const y = -deg * pxPerDeg; // negative pitch up on screen
+    const halfW = major ? 70 : 30;
+    ladderLines.push(
+      <g key={deg} transform={`translate(0 ${y})`}
+         opacity={Math.abs(deg) > 35 ? 0.35 : 0.85}>
+        {/* left bar */}
+        <line x1={-halfW - 24} y1={0} x2={-24} y2={0}
+              stroke="var(--hud-color)" strokeWidth="1.4"
+              strokeDasharray={deg > 0 ? 'none' : '5 4'} />
+        {/* right bar */}
+        <line x1={24} y1={0} x2={halfW + 24} y2={0}
+              stroke="var(--hud-color)" strokeWidth="1.4"
+              strokeDasharray={deg > 0 ? 'none' : '5 4'} />
+        {/* downward tick on positive (climb) bars, upward on negative (dive) */}
+        <line x1={-24} y1={0} x2={-24} y2={deg > 0 ? 6 : -6}
+              stroke="var(--hud-color)" strokeWidth="1.2" />
+        <line x1={24} y1={0} x2={24} y2={deg > 0 ? 6 : -6}
+              stroke="var(--hud-color)" strokeWidth="1.2" />
+        {major && (
+          <>
+            <text x={-halfW - 30} y={4} textAnchor="end"
+                  fill="var(--hud-color)"
+                  style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall + 1 }}>
+              {Math.abs(deg)}
+            </text>
+            <text x={halfW + 30} y={4} textAnchor="start"
+                  fill="var(--hud-color)"
+                  style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall + 1 }}>
+              {Math.abs(deg)}
+            </text>
+          </>
+        )}
+      </g>
+    );
+  }
+
+  return (
+    <g transform={`rotate(${-bank} ${Cx} ${Cy})`}>
+      <g transform={`translate(${Cx} ${Cy + pitch * 10})`}>
+        {/* Horizon line — bright and continuous */}
+        <line x1={-220} y1={0} x2={-24} y2={0}
+              stroke="var(--hud-color)" strokeWidth="1.8" />
+        <line x1={24}   y1={0} x2={220}  y2={0}
+              stroke="var(--hud-color)" strokeWidth="1.8" />
+        {ladderLines}
+      </g>
+    </g>
+  );
+}
+
+// Heading tape across the top — numbers scroll as heading changes.
+function HeadingTape({ heading }) {
+  const tickEvery = 5;
+  const pxPerDeg = 6;
+  const halfRange = 30; // show ±30°
+  const ticks = [];
+  const headingRound = Math.round(heading);
+  for (let off = -halfRange; off <= halfRange; off += tickEvery) {
+    const deg = ((headingRound + off) % 360 + 360) % 360;
+    const x = Cx + off * pxPerDeg;
+    const major = deg % 10 === 0;
+    ticks.push(
+      <g key={`h${off}`}>
+        <line x1={x} y1={48} x2={x} y2={major ? 60 : 56}
+              stroke="var(--hud-color)" strokeWidth={major ? 1.2 : 0.8} />
+        {major && (
+          <text x={x} y={42} textAnchor="middle"
+                fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+            {String(deg).padStart(3, '0')}
+          </text>
+        )}
+      </g>
+    );
+  }
+  return (
+    <g>
+      {ticks}
+      {/* Current heading caret + readout */}
+      <rect x={Cx - 24} y={20} width={48} height={20}
+            fill="none" stroke="var(--hud-color)" strokeWidth="1.4" />
+      <text x={Cx} y={35} textAnchor="middle"
+            fill="var(--hud-color)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSize, fontWeight: 700 }}>
+        {String(headingRound).padStart(3, '0')}
+      </text>
+      <polygon points={`${Cx - 6},65 ${Cx + 6},65 ${Cx},72`}
+               fill="var(--hud-color)" />
+    </g>
+  );
+}
+
+// Vertical airspeed tape on the left
+function AirspeedTape({ airspeed, mach }) {
+  const range = 8; const step = 10;
+  const pxPer = 18;
+  const lines = [];
+  const round10 = Math.round(airspeed / 10) * 10;
+  for (let off = -range; off <= range; off++) {
+    const v = round10 + off * step;
+    const y = Cy - (v - airspeed) * pxPer / step;
+    if (v < 0) continue;
+    const major = v % 50 === 0;
+    lines.push(
+      <g key={`sp${off}`}>
+        <line x1={60} y1={y} x2={major ? 78 : 70} y2={y}
+              stroke="var(--hud-color)" strokeWidth={major ? 1.2 : 0.7}
+              opacity={0.85} />
+        {major && (
+          <text x={56} y={y + 4} textAnchor="end"
+                fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+            {v}
+          </text>
+        )}
+      </g>
+    );
+  }
+  return (
+    <g>
+      <line x1={60} y1={Cy - range * pxPer} x2={60} y2={Cy + range * pxPer}
+            stroke="var(--hud-color-dim)" strokeWidth="0.8" />
+      {lines}
+      {/* Center readout box */}
+      <rect x={20} y={Cy - 14} width={68} height={28}
+            fill="var(--hud-bg)" stroke="var(--hud-color)" strokeWidth="1.4" />
+      <text x={54} y={Cy + 5} textAnchor="middle"
+            fill="var(--hud-color)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeLarge, fontWeight: 700 }}>
+        {airspeed}
+      </text>
+      {/* Mach below */}
+      <text x={54} y={Cy + 32} textAnchor="middle"
+            fill="var(--hud-color)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+        M {mach}
+      </text>
+      <text x={54} y={Cy - 24} textAnchor="middle"
+            fill="var(--hud-color-fade)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall - 1 }}>
+        KIAS
+      </text>
+    </g>
+  );
+}
+
+// Vertical altitude tape on the right
+function AltitudeTape({ altitude, verticalSpeed }) {
+  const range = 8; const step = 100;
+  const pxPer = 18;
+  const lines = [];
+  const round100 = Math.round(altitude / 100) * 100;
+  for (let off = -range; off <= range; off++) {
+    const v = round100 + off * step;
+    const y = Cy - (v - altitude) * pxPer / step;
+    if (v < 0) continue;
+    const major = v % 500 === 0;
+    lines.push(
+      <g key={`al${off}`}>
+        <line x1={Vw - 78} y1={y} x2={Vw - (major ? 60 : 68)} y2={y}
+              stroke="var(--hud-color)" strokeWidth={major ? 1.2 : 0.7}
+              opacity={0.85} />
+        {major && (
+          <text x={Vw - 56} y={y + 4} textAnchor="start"
+                fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+            {v}
+          </text>
+        )}
+      </g>
+    );
+  }
+  // VSI arrow position
+  const vsiY = Cy + Math.max(-60, Math.min(60, -verticalSpeed / 50));
+  return (
+    <g>
+      <line x1={Vw - 60} y1={Cy - range * pxPer} x2={Vw - 60} y2={Cy + range * pxPer}
+            stroke="var(--hud-color-dim)" strokeWidth="0.8" />
+      {lines}
+      {/* Center readout box */}
+      <rect x={Vw - 88} y={Cy - 14} width={68} height={28}
+            fill="var(--hud-bg)" stroke="var(--hud-color)" strokeWidth="1.4" />
+      <text x={Vw - 54} y={Cy + 5} textAnchor="middle"
+            fill="var(--hud-color)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeLarge, fontWeight: 700 }}>
+        {altitude}
+      </text>
+      <text x={Vw - 54} y={Cy - 24} textAnchor="middle"
+            fill="var(--hud-color-fade)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall - 1 }}>
+        ALT  FT
+      </text>
+      {/* VSI sidebar */}
+      <line x1={Vw - 16} y1={Cy - 60} x2={Vw - 16} y2={Cy + 60}
+            stroke="var(--hud-color-dim)" strokeWidth="0.8" />
+      <polygon points={`${Vw - 24},${vsiY} ${Vw - 12},${vsiY - 5} ${Vw - 12},${vsiY + 5}`}
+               fill="var(--hud-color)" />
+      <text x={Vw - 18} y={Cy + 76} textAnchor="middle"
+            fill="var(--hud-color-fade)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall - 1 }}>
+        VS
+      </text>
+    </g>
+  );
+}
+
+// Boresight + waterline + flight path marker (FPV)
+function Boresight({ pitch, bank }) {
+  // FPV drifts based on bank/pitch — gives the "alive" feel
+  const fpvX = Cx + Math.sin(bank / 90) * 14;
+  const fpvY = Cy + Math.cos(bank / 90) * 6 - pitch * 0.4;
+  return (
+    <g>
+      {/* Waterline (fixed reticle) */}
+      <g stroke="var(--hud-color)" strokeWidth="2" fill="none">
+        <line x1={Cx - 30} y1={Cy} x2={Cx - 10} y2={Cy} />
+        <line x1={Cx + 10} y1={Cy} x2={Cx + 30} y2={Cy} />
+        <line x1={Cx - 10} y1={Cy} x2={Cx - 10} y2={Cy + 8} />
+        <line x1={Cx + 10} y1={Cy} x2={Cx + 10} y2={Cy + 8} />
+      </g>
+      {/* FPV circle with wings */}
+      <g stroke="var(--hud-color)" strokeWidth="1.4" fill="none">
+        <circle cx={fpvX} cy={fpvY} r={7} />
+        <line x1={fpvX - 7} y1={fpvY} x2={fpvX - 16} y2={fpvY} />
+        <line x1={fpvX + 7} y1={fpvY} x2={fpvX + 16} y2={fpvY} />
+        <line x1={fpvX} y1={fpvY - 7} x2={fpvX} y2={fpvY - 13} />
+      </g>
+    </g>
+  );
+}
+
+// Bank indicator arc at the bottom
+function BankIndicator({ bank }) {
+  const arcR = 110;
+  const arcCy = Cy + 120;
+  const ticks = [];
+  for (let deg = -60; deg <= 60; deg += 10) {
+    const isMajor = deg % 30 === 0;
+    const a = (deg - 90) * Math.PI / 180;
+    const x1 = Cx + Math.cos(a) * arcR;
+    const y1 = arcCy + Math.sin(a) * arcR;
+    const x2 = Cx + Math.cos(a) * (arcR + (isMajor ? 10 : 5));
+    const y2 = arcCy + Math.sin(a) * (arcR + (isMajor ? 10 : 5));
+    ticks.push(
+      <line key={deg} x1={x1} y1={y1} x2={x2} y2={y2}
+            stroke="var(--hud-color)"
+            strokeWidth={isMajor ? 1.3 : 0.8} opacity={0.85} />
+    );
+  }
+  // Pointer
+  const a = (bank - 90) * Math.PI / 180;
+  const px = Cx + Math.cos(a) * (arcR - 4);
+  const py = arcCy + Math.sin(a) * (arcR - 4);
+  return (
+    <g>
+      <path d={`M ${Cx - arcR} ${arcCy} A ${arcR} ${arcR} 0 0 1 ${Cx + arcR} ${arcCy}`}
+            fill="none" stroke="var(--hud-color-fade)" strokeWidth="0.8" />
+      {ticks}
+      <polygon
+        points={`${px},${py} ${Cx + Math.cos(a) * (arcR - 18) - Math.sin(a) * 6},${arcCy + Math.sin(a) * (arcR - 18) + Math.cos(a) * 6} ${Cx + Math.cos(a) * (arcR - 18) + Math.sin(a) * 6},${arcCy + Math.sin(a) * (arcR - 18) - Math.cos(a) * 6}`}
+        fill="var(--hud-color)" />
+    </g>
+  );
+}
+
+// Target box that drifts and locks every few seconds
+function TargetBox({ t }) {
+  // Drift in a slow Lissajous around the upper-right quadrant
+  const tx = Cx + 90 + Math.sin(t * 0.6) * 50;
+  const ty = Cy - 60 + Math.cos(t * 0.43) * 38;
+  // Lock pulses every 3.2s
+  const cyc = (t % 3.2) / 3.2;
+  const locked = cyc > 0.7;
+  return (
+    <g>
+      <g stroke={locked ? 'var(--hud-alert)' : 'var(--hud-color)'} strokeWidth="1.4" fill="none">
+        {/* corner brackets */}
+        {[[-14,-14, 6,0, 0,6], [14,-14, -6,0, 0,6],
+          [-14, 14, 6,0, 0,-6], [14, 14, -6,0, 0,-6]].map(([dx, dy, lx, ly, ux, uy], i) => (
+          <g key={i} transform={`translate(${tx + dx} ${ty + dy})`}>
+            <line x1={0} y1={0} x2={lx} y2={ly} />
+            <line x1={0} y1={0} x2={ux} y2={uy} />
+          </g>
+        ))}
+      </g>
+      <text x={tx + 20} y={ty - 18} fill={locked ? 'var(--hud-alert)' : 'var(--hud-color)'}
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+        {locked ? 'LOCK' : 'TRK'}
+      </text>
+      <text x={tx + 20} y={ty - 6} fill="var(--hud-color-fade)"
+            style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall - 1 }}>
+        {`${Math.round(8 + Math.sin(t * 0.3) * 2)}.${Math.round((t * 10) % 10)} NM`}
+      </text>
+    </g>
+  );
+}
+
+function HUD() {
+  const t = useTime();
+  const s = useSensor(t);
+
+  const clockStr = useMemo(() => {
+    const sec = Math.floor(t);
+    const hh = String(Math.floor(sec / 3600) % 24).padStart(2, '0');
+    const mm = String(Math.floor(sec / 60) % 60).padStart(2, '0');
+    const ss = String(sec % 60).padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
+  }, [Math.floor(t)]);
+
+  return (
+    <>
+      <svg width="100%" height="100%" viewBox={`0 0 ${Vw} ${Vh}`}
+           preserveAspectRatio="xMidYMid meet"
+           style={{
+             background: 'var(--hud-bg)',
+             display: 'block',
+             filter: 'drop-shadow(0 0 1px var(--hud-color-fade))',
+           }}>
+        {/* Pitch ladder + horizon (rotated/translated together) */}
+        <PitchLadder pitch={s.pitch} bank={s.bank} />
+
+        {/* Heading tape (top) */}
+        <HeadingTape heading={s.heading} />
+
+        {/* Airspeed tape (left) */}
+        <AirspeedTape airspeed={s.airspeed} mach={s.mach} />
+
+        {/* Altitude tape (right) */}
+        <AltitudeTape altitude={s.altitude} verticalSpeed={s.verticalSpeed} />
+
+        {/* Bank indicator (bottom arc) */}
+        <BankIndicator bank={s.bank} />
+
+        {/* Waterline + FPV */}
+        <Boresight pitch={s.pitch} bank={s.bank} />
+
+        {/* Target box */}
+        <TargetBox t={t} />
+
+        {/* Bottom-left status block */}
+        <g>
+          <text x={20} y={Vh - 76} fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSize }}>
+            {CONFIG.mode}
+          </text>
+          <text x={20} y={Vh - 58} fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSize }}>
+            WPN {CONFIG.weapon}
+          </text>
+          <text x={20} y={Vh - 40} fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSize }}>
+            {CONFIG.callsign}
+          </text>
+          <text x={20} y={Vh - 18} fill="var(--hud-color-fade)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+            G {s.gforce}  AOA {s.aoa}°
+          </text>
+        </g>
+
+        {/* Bottom-right status block */}
+        <g>
+          <text x={Vw - 20} y={Vh - 58} textAnchor="end" fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSize }}>
+            RA {s.altitude - 4200}
+          </text>
+          <text x={Vw - 20} y={Vh - 40} textAnchor="end" fill="var(--hud-color)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSize }}>
+            VS {s.verticalSpeed > 0 ? '+' : ''}{s.verticalSpeed}
+          </text>
+          <text x={Vw - 20} y={Vh - 18} textAnchor="end" fill="var(--hud-color-fade)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+            {clockStr} Z
+          </text>
+        </g>
+
+        {/* Top corner data — waypoint cue */}
+        <g>
+          <text x={20} y={20} fill="var(--hud-color-fade)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+            WPT 03
+          </text>
+          <text x={Vw - 20} y={20} textAnchor="end" fill="var(--hud-color-fade)"
+                style={{ fontFamily: 'inherit', fontSize: CONFIG.fontSizeSmall }}>
+            ETA {String(Math.floor(t / 60) + 12).padStart(2,'0')}:{String(Math.floor(t % 60)).padStart(2,'0')}
+          </text>
+        </g>
+      </svg>
+
+      <div className="hud-scanlines"></div>
+      <div className="hud-flicker"></div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<HUD />);
+</script>
+
+</body>
+</html>
