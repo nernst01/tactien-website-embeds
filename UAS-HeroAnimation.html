@@ -416,6 +416,16 @@ document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { p
 
   stage.style.setProperty('--crossfade-ms', CONFIG.crossFadeMs + 'ms');
 
+  // Some mobile WebKit/Chrome builds only honor the muted/playsinline
+  // IDL properties (not the parsed HTML attributes) once `src` is
+  // assigned dynamically via script, which is how this file loads
+  // video — set them explicitly as a belt-and-suspenders fix.
+  [videoA, videoB].forEach(v => {
+    v.muted = true;
+    v.defaultMuted = true;
+    v.playsInline = true;
+  });
+
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Two video slots we alternate between. "active" is on top / visible,
@@ -575,6 +585,22 @@ document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { p
       }
     }
   });
+
+  // Mobile browsers (particularly inside a cross-origin iframe embed
+  // like this one on Wix) can silently reject the very first
+  // programmatic play() call until a genuine user gesture happens
+  // anywhere in the frame. Rather than making visitors hunt for the
+  // tiny pause/play button, treat the first touch/click ANYWHERE on
+  // the hero as that unlocking gesture and retry play() immediately.
+  function unlockAutoplay() {
+    if (activeVideo && activeVideo.paused && !manuallyPaused) {
+      activeVideo.play().catch(() => {});
+    }
+    document.removeEventListener('touchstart', unlockAutoplay);
+    document.removeEventListener('pointerdown', unlockAutoplay);
+  }
+  document.addEventListener('touchstart', unlockAutoplay, { passive: true });
+  document.addEventListener('pointerdown', unlockAutoplay, { passive: true });
 
   // Kick off the sequence
   playAircraft(0, activeVideo);
