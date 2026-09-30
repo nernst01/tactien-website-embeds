@@ -1,0 +1,248 @@
+<title>CUAS Performance Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C8975A;
+    --ink: #1A1A1A;
+    --sub: #6B6864;
+    --bg: #FFFFFF;
+    --panel: #F0EFED;
+    --grid: #DCDAD6;
+    --grid-strong: #C7C4BF;
+    --crossfade-ms: 900ms;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ink: #F0EFED;
+      --sub: #A6A29B;
+      --bg: #17130F;
+      --panel: #211B15;
+      --grid: #3A322A;
+      --grid-strong: #4A4034;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #F0EFED;
+    --sub: #A6A29B;
+    --bg: #17130F;
+    --panel: #211B15;
+    --grid: #3A322A;
+    --grid-strong: #4A4034;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: transparent;
+    font-family: "Roboto", Arial, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px 20px 32px;
+  }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .grid-ring { fill: none; stroke: var(--grid); stroke-width: 1; }
+  .grid-ring.outer { stroke: var(--grid-strong); }
+  .spoke { stroke: var(--grid); stroke-width: 1; }
+  .ring-label {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    fill: var(--sub);
+    text-anchor: middle;
+  }
+  .axis-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    fill: var(--ink);
+  }
+  .data-layer {
+    opacity: 0;
+    transition: opacity var(--crossfade-ms) linear;
+  }
+  .data-layer.active { opacity: 1; }
+  .data-fill { fill: var(--gold); fill-opacity: 0.16; }
+  .data-stroke { fill: none; stroke: var(--gold); stroke-width: 2.25; stroke-linejoin: round; }
+  .data-dot { stroke: var(--bg); stroke-width: 1.5; }
+  .data-dot.good { fill: #4CA771; }
+  .data-dot.fair { fill: #D9A441; }
+  .data-dot.poor { fill: #C1494A; }
+  .data-dot-glow { opacity: 0.55; }
+  .vendor-label {
+    text-align: center;
+    margin-top: -8px;
+    font-family: "Roboto", Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity calc(var(--crossfade-ms) * 0.6) ease;
+  }
+  .vendor-label.show { opacity: 1; }
+</style>
+
+<div class="wrap">
+  <svg id="radar" viewBox="0 0 600 600"></svg>
+  <div class="vendor-label" id="vendorLabel"></div>
+</div>
+
+<script>
+(function () {
+  // ---- CONFIG ----
+  // Axes match CUAS-KPIlist.html (Custom KPIs excluded -- it's a catch-all
+  // line item, not a measurable axis). This is decorative: vendor names and
+  // scores are illustrative, not measured data. Edit VENDORS to add/swap
+  // entries; the crossfade loop below picks them up automatically.
+  const AXES = [
+    ['Detection', 'Rate (Pd)'],
+    ['Tracking', 'Continuity'],
+    ['Positional', 'Accuracy'],
+    ['Latency'],
+    ['False Positive', 'Rate'],
+    ['Classification', 'Accuracy']
+  ];
+  const VENDORS = [
+    { name: 'CUAS Vendor 1', values: [94, 91, 88, 65, 90, 86] },
+    { name: 'CUAS Vendor 2', values: [76, 85, 68, 90, 62, 79] },
+    { name: 'CUAS Vendor 3', values: [88, 66, 93, 71, 84, 90] }
+  ];
+  const HOLD_MS = 3600;
+  const CROSSFADE_MS = 900;
+  const RINGS = [20, 40, 60, 80, 100];
+  const MAX = 100;
+
+  document.documentElement.style.setProperty('--crossfade-ms', CROSSFADE_MS + 'ms');
+
+  const cx = 300, cy = 300, R = 200;
+  const n = AXES.length;
+  const svgns = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('radar');
+  const vendorLabel = document.getElementById('vendorLabel');
+
+  function pt(i, r) {
+    const angle = -Math.PI / 2 + i * (2 * Math.PI / n);
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+  function polyPoints(radiusFn) {
+    return AXES.map((_, i) => { const p = pt(i, radiusFn(i)); return p.x + ',' + p.y; }).join(' ');
+  }
+  function el(tag, attrs) {
+    const e = document.createElementNS(svgns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  const TIER_COLORS = { good: '#4CA771', fair: '#D9A441', poor: '#C1494A' };
+
+  // Glow filter, reused by every dot
+  const defs = el('defs', {});
+  const glowFilter = el('filter', { id: 'dotGlow', x: '-150%', y: '-150%', width: '400%', height: '400%' });
+  glowFilter.appendChild(el('feGaussianBlur', { stdDeviation: 3.2 }));
+  defs.appendChild(glowFilter);
+  svg.appendChild(defs);
+
+  // Grid rings (static, drawn once)
+  RINGS.forEach((val, idx) => {
+    const r = (val / MAX) * R;
+    svg.appendChild(el('polygon', {
+      class: 'grid-ring' + (idx === RINGS.length - 1 ? ' outer' : ''),
+      points: polyPoints(() => r)
+    }));
+  });
+
+  // Spokes (static)
+  for (let i = 0; i < n; i++) {
+    const p = pt(i, R);
+    svg.appendChild(el('line', { class: 'spoke', x1: cx, y1: cy, x2: p.x, y2: p.y }));
+  }
+
+  // Ring % labels, up the top spoke (static)
+  RINGS.forEach((val) => {
+    const r = (val / MAX) * R;
+    const label = el('text', { class: 'ring-label', x: cx + 16, y: cy - r + 3 });
+    label.textContent = val + '%';
+    svg.appendChild(label);
+  });
+
+  // Axis (KPI) labels around the perimeter -- same for every vendor (static)
+  const LINE_HEIGHT = 14;
+  for (let i = 0; i < n; i++) {
+    const lp = pt(i, R + 32);
+    const lines = AXES[i];
+    const startY = lp.y - ((lines.length - 1) * LINE_HEIGHT) / 2;
+    const label = el('text', { class: 'axis-label', x: lp.x, y: startY, 'text-anchor': 'middle' });
+    lines.forEach((line, li) => {
+      const tspan = el('tspan', { x: lp.x, dy: li === 0 ? 0 : LINE_HEIGHT });
+      tspan.textContent = line;
+      label.appendChild(tspan);
+    });
+    svg.appendChild(label);
+  }
+
+  // Two crossfading data layers, one per "current" / "next" vendor
+  const layerA = el('g', { class: 'data-layer' });
+  const layerB = el('g', { class: 'data-layer' });
+  svg.appendChild(layerA);
+  svg.appendChild(layerB);
+
+  function renderVendor(layer, vendor) {
+    while (layer.firstChild) layer.removeChild(layer.firstChild);
+    const dataR = (i) => (vendor.values[i] / MAX) * R;
+    layer.appendChild(el('polygon', { class: 'data-fill', points: polyPoints(dataR) }));
+    layer.appendChild(el('polygon', { class: 'data-stroke', points: polyPoints(dataR) }));
+    for (let i = 0; i < n; i++) {
+      const dp = pt(i, dataR(i));
+      const v = vendor.values[i];
+      const tier = v >= 90 ? 'good' : v >= 70 ? 'fair' : 'poor';
+      layer.appendChild(el('circle', {
+        class: 'data-dot-glow',
+        cx: dp.x, cy: dp.y, r: 9,
+        fill: TIER_COLORS[tier],
+        filter: 'url(#dotGlow)'
+      }));
+      layer.appendChild(el('circle', { class: 'data-dot ' + tier, cx: dp.x, cy: dp.y, r: 4.5 }));
+    }
+  }
+
+  let current = layerA;
+  let next = layerB;
+  let index = 0;
+
+  function cycle() {
+    const nextIndex = (index + 1) % VENDORS.length;
+    renderVendor(next, VENDORS[nextIndex]);
+
+    next.classList.add('active');
+    current.classList.remove('active');
+    vendorLabel.classList.remove('show');
+
+    setTimeout(() => {
+      vendorLabel.textContent = VENDORS[nextIndex].name;
+      vendorLabel.classList.add('show');
+    }, CROSSFADE_MS * 0.4);
+
+    setTimeout(() => {
+      const old = current;
+      current = next;
+      next = old;
+      index = nextIndex;
+      setTimeout(cycle, HOLD_MS);
+    }, CROSSFADE_MS);
+  }
+
+  // Init
+  renderVendor(current, VENDORS[0]);
+  current.classList.add('active');
+  vendorLabel.textContent = VENDORS[0].name;
+  vendorLabel.classList.add('show');
+  setTimeout(cycle, HOLD_MS);
+})();
+</script>
