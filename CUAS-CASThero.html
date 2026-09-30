@@ -1,0 +1,62 @@
+<!--
+  Tactien CAST Hero — single looping video
+  Same footage as CAST's in-app hero (src/pages/cast/Home.jsx), native aspect
+  ratio 1920x954. No crossfade, no overlays -- just a full-bleed loop, video
+  hosted on Wix Media Manager (video.wixstatic.com), ready for the Custom
+  HTML embed on the CUAS page's CAST section.
+-->
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --near-black: #1A1A1A;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: var(--near-black);
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+  #stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--near-black);
+  }
+  video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <video
+    autoplay
+    muted
+    loop
+    playsinline
+    webkit-playsinline="true"
+    referrerpolicy="unsafe-url"
+    poster="https://static.wixstatic.com/media/f27dcb_42681bcab03a4467b45ebd01d17157b0f001.jpg"
+    src="https://video.wixstatic.com/video/f27dcb_42681bcab03a4467b45ebd01d17157b0/1080p/mp4/file.mp4"
+  ></video>
+</div>
+
+<script>
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+</script>
+
+</body>
+</html>
