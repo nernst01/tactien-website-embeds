@@ -1,95 +1,37 @@
-<title>CUAS Performance Radar</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CUAS — Performance Radar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --gold: #C8975A;
-    --ink: #1A1A1A;
-    --sub: #6B6864;
-    --bg: #FFFFFF;
-    --panel: #F0EFED;
-    --grid: #DCDAD6;
-    --grid-strong: #C7C4BF;
-    --crossfade-ms: 900ms;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --ink: #F0EFED;
-      --sub: #A6A29B;
-      --bg: #17130F;
-      --panel: #211B15;
-      --grid: #3A322A;
-      --grid-strong: #4A4034;
-    }
-  }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --ink: #F0EFED;
-    --sub: #A6A29B;
-    --bg: #17130F;
-    --panel: #211B15;
-    --grid: #3A322A;
-    --grid-strong: #4A4034;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    background: transparent !important;
-  }
-  body {
-    margin: 0;
-    font-family: "Roboto", Arial, sans-serif;
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-  .wrap {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 16px 20px 32px;
-  }
-  svg { display: block; width: 100%; height: auto; overflow: visible; }
-  .grid-ring { fill: none; stroke: var(--grid); stroke-width: 1; }
-  .grid-ring.outer { stroke: var(--grid-strong); }
-  .spoke { stroke: var(--grid); stroke-width: 1; }
-  .ring-label {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
-    font-size: 10px;
-    fill: var(--sub);
-    text-anchor: middle;
-  }
-  .axis-label {
-    font-size: 12.5px;
-    font-weight: 500;
-    fill: var(--ink);
-  }
-  .data-layer {
-    opacity: 0;
-    transition: opacity var(--crossfade-ms) linear;
-  }
-  .data-layer.active { opacity: 1; }
-  .data-fill { fill: var(--gold); fill-opacity: 0.16; }
-  .data-stroke { fill: none; stroke: var(--gold); stroke-width: 2.25; stroke-linejoin: round; }
-  .data-dot { stroke: var(--bg); stroke-width: 1.5; }
-  .data-dot.good { fill: #4CA771; }
-  .data-dot.fair { fill: #D9A441; }
-  .data-dot.poor { fill: #C1494A; }
-  .data-dot-glow { opacity: 0.55; }
-  .vendor-label {
-    text-align: center;
-    margin-top: -8px;
-    font-family: "Roboto", Arial, sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--gold);
-    opacity: 0;
-    transition: opacity calc(var(--crossfade-ms) * 0.6) ease;
-  }
-  .vendor-label.show { opacity: 1; }
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;overscroll-behavior:none;touch-action:none}
+body{font-family:"Roboto",Arial,Helvetica,sans-serif;color:#1A1A1A;-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto;padding:16px 20px 32px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.grid-ring{fill:none;stroke:#DCDAD6;stroke-width:1}
+.grid-ring.outer{stroke:#C7C4BF}
+.spoke{stroke:#DCDAD6;stroke-width:1}
+.ring-label{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:10px;fill:#6B6864;text-anchor:middle}
+.axis-label{font-size:12.5px;font-weight:500;fill:#1A1A1A}
+.data-layer{opacity:0;transition:opacity 900ms linear}
+.data-layer.active{opacity:1}
+.data-fill{fill:#C8975A;fill-opacity:.16}
+.data-stroke{fill:none;stroke:#C8975A;stroke-width:2.25;stroke-linejoin:round}
+.data-dot{stroke:#FFFFFF;stroke-width:1.5}
+.data-dot.good{fill:#4CA771}
+.data-dot.fair{fill:#D9A441}
+.data-dot.poor{fill:#C1494A}
+.data-dot-glow{opacity:.55}
+.vendor-label{text-align:center;margin-top:-8px;font-family:"Roboto",Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#C8975A;opacity:0;transition:opacity 540ms ease}
+.vendor-label.show{opacity:1}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <svg id="radar" viewBox="0 0 600 600"></svg>
@@ -120,8 +62,6 @@
   const CROSSFADE_MS = 900;
   const RINGS = [20, 40, 60, 80, 100];
   const MAX = 100;
-
-  document.documentElement.style.setProperty('--crossfade-ms', CROSSFADE_MS + 'ms');
 
   const cx = 300, cy = 300, R = 200;
   const n = AXES.length;
@@ -248,3 +188,6 @@
   setTimeout(cycle, HOLD_MS);
 })();
 </script>
+
+</body>
+</html>
