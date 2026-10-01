@@ -29,7 +29,8 @@
   .node-circle { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Almoni', 'Arial Black', sans-serif; font-size: 22px; border: 2px solid #C8975A; }
   .node-title { text-align: center; font-size: 14px; line-height: 1.35; }
   .panels { margin-top: 44px; min-height: 260px; }
-  .stage-card { background: #141414; border-top: 2px solid #C8975A; padding: 40px; width: 982px; max-width: 100%; min-height: 714px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px 24px; align-content: start; }
+  .stage-card { background: #141414; border-top: 2px solid #C8975A; padding: 40px; width: 982px; max-width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px 24px; align-content: start; }
+  .stage-card > * { min-width: 0; }
   .stage-card h3 { margin: 0 0 18px; font-family: 'Almoni', 'Arial Black', sans-serif; color: #FFFFFF; font-size: 18px; }
   .stage-card ul { margin: 0; padding-left: 20px; color: #F0EFED; font-size: 15px; line-height: 1.85; }
   .stage-card p { margin: 0 0 14px; color: #F0EFED; font-size: 15px; line-height: 1.7; }
@@ -62,6 +63,10 @@
   .shot-wide { height: 320px; width: 100%; }
   .shot-kpi { height: 190px; }
 
+  @media (min-width: 1001px) {
+    .stage-card { min-height: 714px; }
+  }
+
   @media (max-width: 760px) {
     .cast-wrap { padding: 0 18px 48px; }
     .stage-card { width: 100%; padding: 28px 24px; gap: 32px 20px; }
@@ -76,8 +81,7 @@
     .node-circle { width: 56px; height: 56px; font-size: 17px; }
     .node-title { font-size: 12.5px; }
     .panels { margin-top: 28px; min-height: 0; }
-    .stage-card { grid-template-columns: minmax(0, 1fr); min-height: 0; padding: 24px 18px; gap: 28px; }
-    .stage-card > * { min-width: 0; }
+    .stage-card { grid-template-columns: minmax(0, 1fr); padding: 24px 18px; gap: 28px; }
     .stage-card h3 { font-size: 17px; margin-bottom: 14px; }
     .stage-card ul, .stage-card p { font-size: 14px; }
     .shot-primary, .shot-wide { height: auto; aspect-ratio: 16 / 10; }
