@@ -48,8 +48,8 @@
   .kpi-row-track { flex-grow: 1; height: 5px; background: #272727; border-radius: 3px; overflow: hidden; }
   .kpi-row-fill { height: 100%; border-radius: 3px; transition: width 900ms ease, background 900ms ease; }
   .kpi-row-value { width: 24px; flex-shrink: 0; text-align: right; font-family: "Courier New", monospace; font-size: 9px; color: #F0EFED; }
-  .report-cover-frame { margin-top: 36px; width: 443px; height: 574px; max-width: 100%; overflow: hidden; position: relative; border: 1px solid #333333; border-radius: 4px; background: #1A1A1A; }
-  .report-cover-inner { width: 850px; height: 1100px; box-sizing: border-box; background: #1A1A1A; font-family: 'Roboto', Arial, sans-serif; padding: 70px 70px 56px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transform-origin: top left; transform: scale(0.52118); }
+  .report-cover-frame { margin-top: 36px; width: 443px; max-width: 100%; aspect-ratio: 850 / 1100; overflow: hidden; position: relative; border: 1px solid #333333; border-radius: 4px; background: #1A1A1A; }
+  .report-cover-inner { width: 850px; height: 1100px; box-sizing: border-box; background: #1A1A1A; font-family: 'Roboto', Arial, sans-serif; padding: 70px 70px 56px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transform-origin: top left; }
   .report-closing-note { grid-column: 1 / -1; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); font-style: italic; color: #727272; font-size: 13px; line-height: 1.6; }
   .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 40px; cursor: zoom-out; }
   .lightbox-content { position: relative; max-width: 1300px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
@@ -58,6 +58,36 @@
   .lightbox-img { max-width: 100%; max-height: 78vh; width: auto; height: auto; display: block; border: 1px solid #333333; border-radius: 4px; }
   .lightbox-caption { color: #F0EFED; font-size: 14px; }
   .hidden { display: none !important; }
+
+  .shot-primary { height: 267px; }
+  .shot-wide { height: 320px; width: 100%; }
+  .shot-kpi { height: 190px; }
+
+  @media (max-width: 760px) {
+    .cast-wrap { padding: 0 18px 48px; }
+    .stage-card { width: 100%; padding: 28px 24px; gap: 32px 20px; }
+    .report-cover-frame { max-width: 380px; }
+  }
+
+  @media (max-width: 640px) {
+    .cast-wrap { padding: 0 16px 40px; }
+    .node-row { flex-wrap: wrap; justify-content: center; row-gap: 24px; column-gap: 12px; padding: 0; }
+    .node-line { display: none; }
+    .node-btn { width: 44%; min-width: 128px; gap: 10px; }
+    .node-circle { width: 56px; height: 56px; font-size: 17px; }
+    .node-title { font-size: 12.5px; }
+    .panels { margin-top: 28px; min-height: 0; }
+    .stage-card { grid-template-columns: 1fr; min-height: 0; padding: 24px 18px; gap: 28px; }
+    .stage-card h3 { font-size: 17px; margin-bottom: 14px; }
+    .stage-card ul, .stage-card p { font-size: 14px; }
+    .shot-primary, .shot-wide { height: auto; aspect-ratio: 16 / 10; }
+    .shot-kpi { height: auto; aspect-ratio: 16 / 9; }
+    .kpi-motion { height: auto; padding: 16px 14px; }
+    .kpi-row-label { width: 78px; font-size: 8px; }
+    .report-cover-frame { margin-top: 24px; max-width: 320px; margin-left: auto; margin-right: auto; }
+    .lightbox-overlay { padding: 20px; }
+    .lightbox-close { top: -34px; font-size: 26px; }
+  }
 </style>
 </head>
 <body>
@@ -179,13 +209,13 @@
         '</ul>' +
       '</div>' +
       '<div>' +
-        '<button type="button" class="stage-shot" style="height: 267px;" data-shot="IMG-01" aria-label="Expand Site Survey Analysis screenshot">' +
+        '<button type="button" class="stage-shot shot-primary" data-shot="IMG-01" aria-label="Expand Site Survey Analysis screenshot">' +
           '<img class="stage-shot-img" src="' + SHOT_META['IMG-01'].img + '" alt="' + escapeHtml(SHOT_META['IMG-01'].caption) + '">' +
         '</button>' +
         '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-01'].caption) + '</div>' +
       '</div>' +
       '<div class="full-col">' +
-        '<button type="button" class="stage-shot" style="height: 320px; width: 100%;" data-shot="IMG-02" aria-label="Expand Site Survey Analysis screenshot">' +
+        '<button type="button" class="stage-shot shot-wide" data-shot="IMG-02" aria-label="Expand Site Survey Analysis screenshot">' +
           '<img class="stage-shot-img" src="' + SHOT_META['IMG-02'].img + '" alt="' + escapeHtml(SHOT_META['IMG-02'].caption) + '">' +
         '</button>' +
         '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-02'].caption) + '</div>' +
@@ -204,13 +234,13 @@
         '</ul>' +
       '</div>' +
       '<div>' +
-        '<button type="button" class="stage-shot" style="height: 267px;" data-shot="IMG-03" aria-label="Expand Flight Plan Builder screenshot">' +
+        '<button type="button" class="stage-shot shot-primary" data-shot="IMG-03" aria-label="Expand Flight Plan Builder screenshot">' +
           '<img class="stage-shot-img" src="' + SHOT_META['IMG-03'].img + '" alt="' + escapeHtml(SHOT_META['IMG-03'].caption) + '">' +
         '</button>' +
         '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-03'].caption) + '</div>' +
       '</div>' +
       '<div class="full-col">' +
-        '<button type="button" class="stage-shot" style="height: 320px; width: 100%;" data-shot="IMG-04" aria-label="Expand Flight Plan Builder screenshot">' +
+        '<button type="button" class="stage-shot shot-wide" data-shot="IMG-04" aria-label="Expand Flight Plan Builder screenshot">' +
           '<img class="stage-shot-img" src="' + SHOT_META['IMG-04'].img + '" alt="' + escapeHtml(SHOT_META['IMG-04'].caption) + '">' +
         '</button>' +
         '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-04'].caption) + '</div>' +
@@ -231,13 +261,13 @@
         '</ul>' +
       '</div>' +
       '<div>' +
-        '<button type="button" class="stage-shot" style="height: 267px;" data-shot="IMG-05" aria-label="Expand Analysis Hub screenshot">' +
+        '<button type="button" class="stage-shot shot-primary" data-shot="IMG-05" aria-label="Expand Analysis Hub screenshot">' +
           '<img class="stage-shot-img" src="' + SHOT_META['IMG-05'].img + '" alt="' + escapeHtml(SHOT_META['IMG-05'].caption) + '">' +
         '</button>' +
         '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-05'].caption) + '</div>' +
       '</div>' +
       '<div class="full-col">' +
-        '<button type="button" class="stage-shot" style="height: 320px; width: 100%;" data-shot="IMG-06" aria-label="Expand Analysis Hub screenshot">' +
+        '<button type="button" class="stage-shot shot-wide" data-shot="IMG-06" aria-label="Expand Analysis Hub screenshot">' +
           '<img class="stage-shot-img" src="' + SHOT_META['IMG-06'].img + '" alt="' + escapeHtml(SHOT_META['IMG-06'].caption) + '">' +
         '</button>' +
         '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-06'].caption) + '</div>' +
@@ -260,7 +290,7 @@
           '<li>Tactien\'s recommendation</li>' +
         '</ul>' +
         '<div style="margin-top: 20px;">' +
-          '<button type="button" class="stage-shot" style="height: 190px;" data-shot="IMG-07" aria-label="Expand KPI Catalog screenshot">' +
+          '<button type="button" class="stage-shot shot-kpi" data-shot="IMG-07" aria-label="Expand KPI Catalog screenshot">' +
             '<img class="stage-shot-img" src="' + SHOT_META['IMG-07'].img + '" alt="' + escapeHtml(SHOT_META['IMG-07'].caption) + '">' +
           '</button>' +
           '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-07'].caption) + '</div>' +
@@ -305,6 +335,32 @@
     }
     panelEl.innerHTML = html;
     bindShotButtons();
+    bindReportCoverScale();
+  }
+
+  var reportCoverObserver = null;
+
+  function bindReportCoverScale() {
+    if (reportCoverObserver) {
+      reportCoverObserver.disconnect();
+      reportCoverObserver = null;
+    }
+    var frame = panelEl.querySelector('.report-cover-frame');
+    var inner = panelEl.querySelector('.report-cover-inner');
+    if (!frame || !inner) return;
+
+    function applyScale() {
+      var scale = frame.clientWidth / 850;
+      inner.style.transform = 'scale(' + scale + ')';
+    }
+
+    applyScale();
+    if (typeof ResizeObserver !== 'undefined') {
+      reportCoverObserver = new ResizeObserver(applyScale);
+      reportCoverObserver.observe(frame);
+    } else {
+      window.addEventListener('resize', applyScale);
+    }
   }
 
   function bindShotButtons() {
