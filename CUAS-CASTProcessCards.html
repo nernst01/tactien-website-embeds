@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAST Process Cards</title>
+<style>
+  body { margin: 0; }
+  a { color: #C8975A; }
+  a:hover { color: #C9995E; }
+  @font-face {
+    font-family: 'Almoni';
+    src: url('cast-process-cards-assets/almoni.ttf') format('truetype');
+    font-weight: 900;
+  }
+  @font-face {
+    font-family: 'Roboto';
+    src: url('cast-process-cards-assets/roboto.ttf') format('truetype');
+    font-weight: 100 900;
+  }
+  #cast-process { width: 100%; background: #1A1A1A; font-family: 'Roboto', Arial, sans-serif; box-sizing: border-box; }
+  #cast-process * { box-sizing: border-box; }
+  .cast-wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 64px; }
+  .node-row { display: flex; justify-content: space-between; position: relative; padding: 0 8px; }
+  .node-line { position: absolute; top: 36px; left: 78px; right: 78px; height: 2px; background: rgba(200,151,90,0.35); z-index: 0; }
+  .node-btn { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 14px; width: 220px; position: relative; z-index: 1; }
+  .node-btn:hover { opacity: 0.85; }
+  .node-btn:focus-visible { outline: 2px solid #C8975A; outline-offset: 6px; border-radius: 8px; }
+  .node-circle { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Almoni', 'Arial Black', sans-serif; font-size: 22px; border: 2px solid #C8975A; }
+  .node-title { text-align: center; font-size: 14px; line-height: 1.35; }
+  .panels { margin-top: 44px; min-height: 260px; }
+  .stage-card { background: #141414; border-top: 2px solid #C8975A; padding: 40px; width: 982px; max-width: 100%; min-height: 714px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px 24px; align-content: start; }
+  .stage-card h3 { margin: 0 0 18px; font-family: 'Almoni', 'Arial Black', sans-serif; color: #FFFFFF; font-size: 18px; }
+  .stage-card ul { margin: 0; padding-left: 20px; color: #F0EFED; font-size: 15px; line-height: 1.85; }
+  .stage-card p { margin: 0 0 14px; color: #F0EFED; font-size: 15px; line-height: 1.7; }
+  .stage-shot { position: relative; border: 1px solid #333333; border-radius: 4px; display: block; padding: 0; overflow: hidden; background: #0D0D0D; box-sizing: border-box; width: 100%; font-family: inherit; cursor: pointer; transition: border-color 0.15s ease; }
+  .stage-shot:hover { border-color: #C8975A; }
+  .stage-shot:focus-visible { outline: 2px solid #C8975A; outline-offset: 3px; }
+  .stage-shot-img { max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .stage-shot-caption-below { font-size: 12px; color: #727272; line-height: 1.4; margin-top: 8px; text-align: center; }
+  .full-col { grid-column: 1 / -1; }
+  .kpi-motion { border: 1px solid #333333; border-radius: 4px; background: #111111; box-sizing: border-box; height: 190px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .kpi-motion-title { text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #C8975A; margin-bottom: 2px; }
+  @keyframes kpiTitleFade { from { opacity: 0; } to { opacity: 1; } }
+  .kpi-flash { animation: kpiTitleFade 500ms ease; }
+  .kpi-row { display: flex; align-items: center; gap: 7px; }
+  .kpi-row-label { width: 92px; flex-shrink: 0; font-size: 8.5px; color: #DCDAD6; line-height: 1.2; }
+  .kpi-row-track { flex-grow: 1; height: 5px; background: #272727; border-radius: 3px; overflow: hidden; }
+  .kpi-row-fill { height: 100%; border-radius: 3px; transition: width 900ms ease, background 900ms ease; }
+  .kpi-row-value { width: 24px; flex-shrink: 0; text-align: right; font-family: "Courier New", monospace; font-size: 9px; color: #F0EFED; }
+  .report-cover-frame { margin-top: 36px; width: 443px; height: 574px; max-width: 100%; overflow: hidden; position: relative; border: 1px solid #333333; border-radius: 4px; background: #1A1A1A; }
+  .report-cover-inner { width: 850px; height: 1100px; box-sizing: border-box; background: #1A1A1A; font-family: 'Roboto', Arial, sans-serif; padding: 70px 70px 56px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transform-origin: top left; transform: scale(0.52118); }
+  .report-closing-note { grid-column: 1 / -1; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); font-style: italic; color: #727272; font-size: 13px; line-height: 1.6; }
+  .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 40px; cursor: zoom-out; }
+  .lightbox-content { position: relative; max-width: 1300px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .lightbox-close { all: unset; cursor: pointer; position: absolute; top: -40px; right: 0; color: #F0EFED; font-size: 30px; line-height: 1; padding: 6px; }
+  .lightbox-close:hover { color: #C8975A; }
+  .lightbox-img { max-width: 100%; max-height: 78vh; width: auto; height: auto; display: block; border: 1px solid #333333; border-radius: 4px; }
+  .lightbox-caption { color: #F0EFED; font-size: 14px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="cast-process">
+  <div class="cast-wrap">
+
+    <div class="node-row">
+      <div class="node-line"></div>
+      <button type="button" class="node-btn" data-stage="survey" aria-pressed="false">
+        <div class="node-circle">01</div>
+        <div class="node-title">Site Survey &amp; Threat Analysis</div>
+      </button>
+      <button type="button" class="node-btn" data-stage="planning" aria-pressed="false">
+        <div class="node-circle">02</div>
+        <div class="node-title">Flight Planning &amp; Test Preparation</div>
+      </button>
+      <button type="button" class="node-btn" data-stage="analysis" aria-pressed="false">
+        <div class="node-circle">03</div>
+        <div class="node-title">Data Collection &amp; Analysis</div>
+      </button>
+      <button type="button" class="node-btn" data-stage="reporting" aria-pressed="false">
+        <div class="node-circle">04</div>
+        <div class="node-title">Reporting</div>
+      </button>
+    </div>
+
+    <div class="panels" id="cast-panel"></div>
+
+  </div>
+</div>
+
+<div class="lightbox-overlay hidden" id="cast-lightbox">
+  <div class="lightbox-content">
+    <button type="button" class="lightbox-close" aria-label="Close expanded image" id="cast-lightbox-close">&times;</button>
+    <img class="lightbox-img" id="cast-lightbox-img" src="" alt="">
+    <span class="stage-shot-caption-below lightbox-caption" id="cast-lightbox-caption"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+  var SHOT_META = {
+    'IMG-01': { img: 'cast-process-cards-assets/IMG-01.png', caption: 'Site Survey Analysis | Incoporates GIS databases to assess and compute envrionmental variables of the target site.' },
+    'IMG-02': { img: 'cast-process-cards-assets/IMG-02.png', caption: 'Site Survey Analysis | Utiizes over 50 GIS databases to calculate factors such as hillshade & viewshed for Line-of-Sight planning purposes.' },
+    'IMG-03': { img: 'cast-process-cards-assets/IMG-03.png', caption: 'Flight Plan Builder module allows build in 2D and 3D environments for maximize planning effectiveness against target stessors.' },
+    'IMG-04': { img: 'cast-process-cards-assets/IMG-04.png', caption: 'Flight Plan Builder exports flight plans in autopilot-specific formats or standard formats for manual ingest.' },
+    'IMG-05': { img: 'cast-process-cards-assets/IMG-05.png', caption: '3D spatial analysis | Vehicle telemetery vs. tracking data' },
+    'IMG-06': { img: 'cast-process-cards-assets/IMG-06.png', caption: 'Altitude profile vs. tracking data variance comparison' },
+    'IMG-07': { img: 'cast-process-cards-assets/IMG-07.png', caption: 'KPI Catalog (sample)' }
+  };
+
+  // Illustrative only -- not measured data.
+  var KPI_FIELDS = [
+    { key: 'pd', label: 'Detection Rate (Pd)' },
+    { key: 'track', label: 'Tracking Continuity' },
+    { key: 'pos', label: 'Positional Accuracy' },
+    { key: 'lat', label: 'Latency' },
+    { key: 'fp', label: 'False Positive Rate' }
+  ];
+  var KPI_VENDORS = [
+    { name: 'CUXS Vendor 1', values: { pd: 94, track: 91, pos: 88, lat: 65, fp: 90 } },
+    { name: 'CUXS Vendor 2', values: { pd: 76, track: 85, pos: 68, lat: 90, fp: 62 } },
+    { name: 'CUXS Vendor 3', values: { pd: 88, track: 66, pos: 93, lat: 71, fp: 84 } }
+  ];
+  var KPI_HOLD_MS = 3600;
+  function kpiTierColor(v) {
+    return v >= 90 ? '#4CA771' : v >= 70 ? '#D9A441' : '#C1494A';
+  }
+
+  var state = { active: 'survey', vendorIndex: 0 };
+  var panelEl = document.getElementById('cast-panel');
+  var lightboxEl = document.getElementById('cast-lightbox');
+  var lightboxImgEl = document.getElementById('cast-lightbox-img');
+  var lightboxCaptionEl = document.getElementById('cast-lightbox-caption');
+  var kpiTimer = null;
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderNodes() {
+    var btns = document.querySelectorAll('.node-btn');
+    btns.forEach(function (btn) {
+      var id = btn.getAttribute('data-stage');
+      var isActive = state.active === id;
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      var circle = btn.querySelector('.node-circle');
+      var title = btn.querySelector('.node-title');
+      circle.style.background = isActive ? '#C8975A' : '#1A1A1A';
+      circle.style.color = isActive ? '#1A1A1A' : '#C8975A';
+      title.style.color = isActive ? '#C8975A' : '#F0EFED';
+      title.style.fontWeight = isActive ? '700' : '400';
+    });
+  }
+
+  function kpiRowsHtml(vendor) {
+    return KPI_FIELDS.map(function (f) {
+      var v = vendor.values[f.key];
+      var color = kpiTierColor(v);
+      return '<div class="kpi-row">' +
+        '<div class="kpi-row-label">' + escapeHtml(f.label) + '</div>' +
+        '<div class="kpi-row-track"><div class="kpi-row-fill" style="width: ' + v + '%; background: ' + color + ';"></div></div>' +
+        '<div class="kpi-row-value">' + v + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function stageCardSurvey() {
+    return '<div class="stage-card">' +
+      '<div>' +
+        '<h3>Site Survey &amp; Threat Analysis</h3>' +
+        '<ul>' +
+          '<li>Site-specifics factors (asset obstructions, site layout, future build plans)</li>' +
+          '<li>Environment factors (terrain, hill shade, viewshed, weather)</li>' +
+          '<li>Protected assets and threat zones mapped to the site\'s unique characteristics and current security plan</li>' +
+          '<li>Third party asset contributors (i.e., RF/EMI environment)</li>' +
+          '<li>Airspace constraints and risk logged into the test plan</li>' +
+        '</ul>' +
+      '</div>' +
+      '<div>' +
+        '<button type="button" class="stage-shot" style="height: 267px;" data-shot="IMG-01" aria-label="Expand Site Survey Analysis screenshot">' +
+          '<img class="stage-shot-img" src="' + SHOT_META['IMG-01'].img + '" alt="' + escapeHtml(SHOT_META['IMG-01'].caption) + '">' +
+        '</button>' +
+        '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-01'].caption) + '</div>' +
+      '</div>' +
+      '<div class="full-col">' +
+        '<button type="button" class="stage-shot" style="height: 320px; width: 100%;" data-shot="IMG-02" aria-label="Expand Site Survey Analysis screenshot">' +
+          '<img class="stage-shot-img" src="' + SHOT_META['IMG-02'].img + '" alt="' + escapeHtml(SHOT_META['IMG-02'].caption) + '">' +
+        '</button>' +
+        '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-02'].caption) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function stageCardPlanning() {
+    return '<div class="stage-card">' +
+      '<div>' +
+        '<h3>Flight Planning &amp; Test Preparation</h3>' +
+        '<ul>' +
+          '<li>Flight plans built to the site\'s features, specifically designed to stress the detection systems</li>' +
+          '<li>Red teaming test procedures with bespoke test cards, defining exact profiles and stressors</li>' +
+          '<li>C-UXS vendor staging procedures</li>' +
+        '</ul>' +
+      '</div>' +
+      '<div>' +
+        '<button type="button" class="stage-shot" style="height: 267px;" data-shot="IMG-03" aria-label="Expand Flight Plan Builder screenshot">' +
+          '<img class="stage-shot-img" src="' + SHOT_META['IMG-03'].img + '" alt="' + escapeHtml(SHOT_META['IMG-03'].caption) + '">' +
+        '</button>' +
+        '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-03'].caption) + '</div>' +
+      '</div>' +
+      '<div class="full-col">' +
+        '<button type="button" class="stage-shot" style="height: 320px; width: 100%;" data-shot="IMG-04" aria-label="Expand Flight Plan Builder screenshot">' +
+          '<img class="stage-shot-img" src="' + SHOT_META['IMG-04'].img + '" alt="' + escapeHtml(SHOT_META['IMG-04'].caption) + '">' +
+        '</button>' +
+        '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-04'].caption) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function stageCardAnalysis() {
+    return '<div class="stage-card">' +
+      '<div>' +
+        '<h3>Data Collection &amp; Analysis</h3>' +
+        '<ul>' +
+          '<li>Vehicle telemetry and vendor detection data captured simultaneously during red teaming event</li>' +
+          '<li>Weather, environmental, and calibration results collected before and during flight operations</li>' +
+          '<li>Telemetry and tracking data standardized and sanitized to meet testing criteria</li>' +
+          '<li>Flight events reconstructed in a 3D geospatial environment and graded across specific KPIs</li>' +
+          '<li>Scoring standards assigned for final performance results by vendor</li>' +
+        '</ul>' +
+      '</div>' +
+      '<div>' +
+        '<button type="button" class="stage-shot" style="height: 267px;" data-shot="IMG-05" aria-label="Expand Analysis Hub screenshot">' +
+          '<img class="stage-shot-img" src="' + SHOT_META['IMG-05'].img + '" alt="' + escapeHtml(SHOT_META['IMG-05'].caption) + '">' +
+        '</button>' +
+        '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-05'].caption) + '</div>' +
+      '</div>' +
+      '<div class="full-col">' +
+        '<button type="button" class="stage-shot" style="height: 320px; width: 100%;" data-shot="IMG-06" aria-label="Expand Analysis Hub screenshot">' +
+          '<img class="stage-shot-img" src="' + SHOT_META['IMG-06'].img + '" alt="' + escapeHtml(SHOT_META['IMG-06'].caption) + '">' +
+        '</button>' +
+        '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-06'].caption) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function stageCardReporting() {
+    var vendor = KPI_VENDORS[state.vendorIndex];
+    return '<div class="stage-card">' +
+      '<div>' +
+        '<h3>Reporting</h3>' +
+        '<p>The report is designed to provide quantitative proof of performance, including:</p>' +
+        '<ul>' +
+          '<li>What was tested (platforms, configurations, and scenarios)</li>' +
+          '<li>How the technologies were stressed</li>' +
+          '<li>How each vendor performed against the KPIs</li>' +
+          '<li>What each vendor excelled at, and where it was weak</li>' +
+          '<li>Who the winners were (by category and overall) and why</li>' +
+          '<li>Tactien\'s recommendation</li>' +
+        '</ul>' +
+        '<div style="margin-top: 20px;">' +
+          '<button type="button" class="stage-shot" style="height: 190px;" data-shot="IMG-07" aria-label="Expand KPI Catalog screenshot">' +
+            '<img class="stage-shot-img" src="' + SHOT_META['IMG-07'].img + '" alt="' + escapeHtml(SHOT_META['IMG-07'].caption) + '">' +
+          '</button>' +
+          '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-07'].caption) + '</div>' +
+        '</div>' +
+        '<div class="kpi-motion" style="margin-top: 16px;">' +
+          '<div class="kpi-motion-title kpi-flash" id="kpi-vendor-name">' + escapeHtml(vendor.name) + '</div>' +
+          '<div id="kpi-rows">' + kpiRowsHtml(vendor) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="report-cover-frame">' +
+        '<div class="report-cover-inner">' +
+          '<div style="position: absolute; top: -220px; right: -220px; width: 560px; height: 560px; border: 1px solid rgba(200,151,90,0.14); border-radius: 50%;"></div>' +
+          '<div style="position: absolute; top: -140px; right: -140px; width: 560px; height: 560px; border: 1px solid rgba(200,151,90,0.1); border-radius: 50%;">' +
+            '<img src="cast-process-cards-assets/castlogo-full-black.webp" alt="castlogo_full_black" width="3000" height="1000" style="max-width: 100%; height: 136px; display: block; object-fit: cover; width: 460px; aspect-ratio: 3000 / 1000; position: absolute; left: -53px; top: 164px">' +
+            '<div style="font-family: \'Almoni\', \'Arial Black\', sans-serif; color: #FFFFFF; font-size: 42px; letter-spacing: 0.01em; margin-bottom: 36px; text-align: center; position: absolute; left: -315px; top: 379px">Counter-UXS Performance Report</div>' +
+          '</div>' +
+          '<div style="display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1;">' +
+            '<div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #727272;">Proprietary &amp; Confidential</div>' +
+          '</div>' +
+          '<div style="text-align: center; position: absolute; z-index: 1; left: 197px; top: 782px">' +
+            '<div style="width: 120px; height: 2px; background: #C8975A; margin: 0 auto 36px;"></div>' +
+            '<div style="font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #AFACA7; margin-bottom: 10px;">ACME COPORATION / HIGH-CONSENQUENCE GENERATION SITE</div>' +
+            '<div style="font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #727272;">DECEMBER, 2026</div>' +
+          '</div>' +
+          '<img src="cast-process-cards-assets/report-screenshot.webp" alt="chrome_npp0qu1j2j" width="1700" height="901" style="max-width: 100%; height: 413px; display: block; object-fit: cover; width: 749px; aspect-ratio: 1700 / 901; position: absolute; left: 51px; top: 330px">' +
+          '<div style="font-size: 12px; color: #727272; text-align: right; line-height: 1.5; width: 301px; height: 47px; position: absolute; left: 513px; top: 1020px">Prepared exclusively for<br>Acme Coporation</div>' +
+          '<img src="cast-process-cards-assets/ttg-logo-transparent.png" alt="fulllogo_transparent_nobuffer_large" width="1728" height="2164" style="max-width: 100%; height: 125px; display: block; object-fit: cover; width: 100px; aspect-ratio: 1728 / 2164; object-position: 0% 0%; position: fixed; left: 37px; top: 945px">' +
+        '</div>' +
+      '</div>' +
+      '<div class="report-closing-note">Where scope allows, scoring extends into defeat and kill-chain effectiveness, not detection and tracking alone.</div>' +
+    '</div>';
+  }
+
+  function renderPanel() {
+    var html;
+    switch (state.active) {
+      case 'survey': html = stageCardSurvey(); break;
+      case 'planning': html = stageCardPlanning(); break;
+      case 'analysis': html = stageCardAnalysis(); break;
+      case 'reporting': html = stageCardReporting(); break;
+      default: html = '<div style="text-align: center; color: #727272; font-size: 14px; padding: 48px 0;">Select a phase above to see how it works.</div>';
+    }
+    panelEl.innerHTML = html;
+    bindShotButtons();
+  }
+
+  function bindShotButtons() {
+    var shots = panelEl.querySelectorAll('[data-shot]');
+    shots.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openLightbox(btn.getAttribute('data-shot'));
+      });
+    });
+  }
+
+  function openLightbox(id) {
+    var meta = SHOT_META[id];
+    if (!meta) return;
+    lightboxImgEl.src = meta.img;
+    lightboxImgEl.alt = meta.caption;
+    lightboxCaptionEl.textContent = meta.caption;
+    lightboxEl.classList.remove('hidden');
+  }
+
+  function closeLightbox() {
+    lightboxEl.classList.add('hidden');
+  }
+
+  document.getElementById('cast-lightbox-close').addEventListener('click', closeLightbox);
+  lightboxEl.addEventListener('click', function (e) {
+    if (e.target === lightboxEl) closeLightbox();
+  });
+
+  document.querySelectorAll('.node-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-stage');
+      state.active = state.active === id ? null : id;
+      renderNodes();
+      renderPanel();
+    });
+  });
+
+  kpiTimer = setInterval(function () {
+    state.vendorIndex = (state.vendorIndex + 1) % KPI_VENDORS.length;
+    if (state.active === 'reporting') {
+      var vendor = KPI_VENDORS[state.vendorIndex];
+      var nameEl = document.getElementById('kpi-vendor-name');
+      var rowsEl = document.getElementById('kpi-rows');
+      if (nameEl && rowsEl) {
+        nameEl.textContent = vendor.name;
+        nameEl.classList.remove('kpi-flash');
+        void nameEl.offsetWidth;
+        nameEl.classList.add('kpi-flash');
+        rowsEl.innerHTML = kpiRowsHtml(vendor);
+      }
+    }
+  }, KPI_HOLD_MS);
+
+  renderNodes();
+  renderPanel();
+})();
+</script>
+
+</body>
+</html>
