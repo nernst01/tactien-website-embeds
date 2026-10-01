@@ -51,12 +51,11 @@
   .report-cover-frame { margin-top: 36px; width: 443px; max-width: 100%; aspect-ratio: 850 / 1100; overflow: hidden; position: relative; border: 1px solid #333333; border-radius: 4px; background: #1A1A1A; }
   .report-cover-inner { width: 850px; height: 1100px; box-sizing: border-box; background: #1A1A1A; font-family: 'Roboto', Arial, sans-serif; padding: 70px 70px 56px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transform-origin: top left; }
   .report-closing-note { grid-column: 1 / -1; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); font-style: italic; color: #727272; font-size: 13px; line-height: 1.6; }
-  .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 40px; cursor: zoom-out; }
+  .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 40px; cursor: zoom-out; font-family: 'Roboto', Arial, sans-serif; }
   .lightbox-content { position: relative; max-width: 1300px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
   .lightbox-close { all: unset; cursor: pointer; position: absolute; top: -40px; right: 0; color: #F0EFED; font-size: 30px; line-height: 1; padding: 6px; }
   .lightbox-close:hover { color: #C8975A; }
   .lightbox-img { max-width: 100%; max-height: 78vh; width: auto; height: auto; display: block; border: 1px solid #333333; border-radius: 4px; }
-  .lightbox-caption { color: #F0EFED; font-size: 14px; }
   .hidden { display: none !important; }
 
   .shot-primary { height: 267px; }
@@ -124,7 +123,7 @@
   <div class="lightbox-content">
     <button type="button" class="lightbox-close" aria-label="Close expanded image" id="cast-lightbox-close">&times;</button>
     <img class="lightbox-img" id="cast-lightbox-img" src="" alt="">
-    <span class="stage-shot-caption-below lightbox-caption" id="cast-lightbox-caption"></span>
+    <span class="stage-shot-caption-below" id="cast-lightbox-caption"></span>
   </div>
 </div>
 
