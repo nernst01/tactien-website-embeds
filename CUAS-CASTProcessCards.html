@@ -65,7 +65,7 @@
   @media (max-width: 760px) {
     .cast-wrap { padding: 0 18px 48px; }
     .stage-card { width: 100%; padding: 28px 24px; gap: 32px 20px; }
-    .report-cover-frame { max-width: 380px; }
+    .report-cover-frame { max-width: min(380px, 100%); }
   }
 
   @media (max-width: 640px) {
@@ -76,14 +76,15 @@
     .node-circle { width: 56px; height: 56px; font-size: 17px; }
     .node-title { font-size: 12.5px; }
     .panels { margin-top: 28px; min-height: 0; }
-    .stage-card { grid-template-columns: 1fr; min-height: 0; padding: 24px 18px; gap: 28px; }
+    .stage-card { grid-template-columns: minmax(0, 1fr); min-height: 0; padding: 24px 18px; gap: 28px; }
+    .stage-card > * { min-width: 0; }
     .stage-card h3 { font-size: 17px; margin-bottom: 14px; }
     .stage-card ul, .stage-card p { font-size: 14px; }
     .shot-primary, .shot-wide { height: auto; aspect-ratio: 16 / 10; }
     .shot-kpi { height: auto; aspect-ratio: 16 / 9; }
     .kpi-motion { height: auto; padding: 16px 14px; }
     .kpi-row-label { width: 78px; font-size: 8px; }
-    .report-cover-frame { margin-top: 24px; max-width: 320px; margin-left: auto; margin-right: auto; }
+    .report-cover-frame { margin-top: 24px; max-width: min(320px, 100%); margin-left: auto; margin-right: auto; }
     .lightbox-overlay { padding: 20px; }
     .lightbox-close { top: -34px; font-size: 26px; }
   }
