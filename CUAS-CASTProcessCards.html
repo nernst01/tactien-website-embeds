@@ -63,6 +63,9 @@
   .shot-wide { height: 320px; width: 100%; }
   .shot-kpi { height: 190px; }
 
+  .kpi-pair { margin-top: 20px; }
+  .kpi-pair-item + .kpi-pair-item { margin-top: 16px; }
+
   @media (min-width: 1001px) {
     .stage-card { min-height: 714px; }
   }
@@ -85,9 +88,15 @@
     .stage-card h3 { font-size: 17px; margin-bottom: 14px; }
     .stage-card ul, .stage-card p { font-size: 14px; }
     .shot-primary, .shot-wide { height: auto; aspect-ratio: 16 / 10; }
-    .shot-kpi { height: auto; aspect-ratio: 16 / 9; }
-    .kpi-motion { height: auto; padding: 16px 14px; }
-    .kpi-row-label { width: 78px; font-size: 8px; }
+    .shot-kpi { height: auto; aspect-ratio: 4 / 3; }
+    .kpi-motion { height: 100%; padding: 12px 10px; }
+    .kpi-motion-title { font-size: 8.5px; }
+    .kpi-row-label { width: 56px; font-size: 6.5px; }
+    .kpi-row-value { width: 18px; font-size: 7.5px; }
+    .kpi-row { gap: 4px; }
+    .kpi-pair { display: flex; align-items: stretch; gap: 10px; }
+    .kpi-pair-item { flex: 1 1 0; min-width: 0; }
+    .kpi-pair-item + .kpi-pair-item { margin-top: 0; }
     .report-cover-frame { margin-top: 24px; max-width: min(320px, 100%); margin-left: auto; margin-right: auto; }
     .lightbox-overlay { padding: 20px; }
     .lightbox-close { top: -34px; font-size: 26px; }
@@ -293,15 +302,19 @@
           '<li>Who the winners were (by category and overall) and why</li>' +
           '<li>Tactien\'s recommendation</li>' +
         '</ul>' +
-        '<div style="margin-top: 20px;">' +
-          '<button type="button" class="stage-shot shot-kpi" data-shot="IMG-07" aria-label="Expand KPI Catalog screenshot">' +
-            '<img class="stage-shot-img" src="' + SHOT_META['IMG-07'].img + '" alt="' + escapeHtml(SHOT_META['IMG-07'].caption) + '">' +
-          '</button>' +
-          '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-07'].caption) + '</div>' +
-        '</div>' +
-        '<div class="kpi-motion" style="margin-top: 16px;">' +
-          '<div class="kpi-motion-title kpi-flash" id="kpi-vendor-name">' + escapeHtml(vendor.name) + '</div>' +
-          '<div id="kpi-rows">' + kpiRowsHtml(vendor) + '</div>' +
+        '<div class="kpi-pair">' +
+          '<div class="kpi-pair-item">' +
+            '<button type="button" class="stage-shot shot-kpi" data-shot="IMG-07" aria-label="Expand KPI Catalog screenshot">' +
+              '<img class="stage-shot-img" src="' + SHOT_META['IMG-07'].img + '" alt="' + escapeHtml(SHOT_META['IMG-07'].caption) + '">' +
+            '</button>' +
+            '<div class="stage-shot-caption-below">' + escapeHtml(SHOT_META['IMG-07'].caption) + '</div>' +
+          '</div>' +
+          '<div class="kpi-pair-item">' +
+            '<div class="kpi-motion">' +
+              '<div class="kpi-motion-title kpi-flash" id="kpi-vendor-name">' + escapeHtml(vendor.name) + '</div>' +
+              '<div id="kpi-rows">' + kpiRowsHtml(vendor) + '</div>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div class="report-cover-frame">' +
