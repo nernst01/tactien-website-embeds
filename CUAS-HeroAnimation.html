@@ -41,7 +41,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(26,26,26,0.55);
+    background: rgba(26,26,26,var(--tint, 0.55));
     z-index: 5;
     pointer-events: none;
   }
@@ -217,6 +217,12 @@ document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { p
   };
 
   document.documentElement.style.setProperty('--crossfade-ms', CONFIG.crossFadeMs + 'ms');
+
+  // Tint strength via URL, e.g. CUAS-HeroAnimation.html?tint=0.4 (0 = none, 1 = solid).
+  const tintParam = parseFloat(new URLSearchParams(location.search).get('tint'));
+  if (!isNaN(tintParam) && tintParam >= 0 && tintParam <= 1) {
+    document.documentElement.style.setProperty('--tint', tintParam);
+  }
 
   const videoA = document.getElementById('videoA');
   const videoB = document.getElementById('videoB');
