@@ -355,6 +355,34 @@
     bindReportCoverScale();
   }
 
+  function measureMaxPanelHeight() {
+    var width = panelEl.getBoundingClientRect().width;
+    var temp = document.createElement('div');
+    temp.style.cssText = 'position:absolute; visibility:hidden; pointer-events:none; left:-9999px; top:0; width:' + width + 'px;';
+    panelEl.parentNode.appendChild(temp);
+    var max = 0;
+    [stageCardSurvey, stageCardPlanning, stageCardAnalysis, stageCardReporting].forEach(function (fn) {
+      temp.innerHTML = fn();
+      max = Math.max(max, temp.scrollHeight);
+    });
+    panelEl.parentNode.removeChild(temp);
+    return max;
+  }
+
+  function lockPanelHeight() {
+    panelEl.style.minHeight = measureMaxPanelHeight() + 'px';
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(lockPanelHeight, 150);
+  });
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(lockPanelHeight);
+  }
+
   var reportCoverObserver = null;
 
   function bindReportCoverScale() {
@@ -434,6 +462,7 @@
 
   renderNodes();
   renderPanel();
+  lockPanelHeight();
 })();
 </script>
 
