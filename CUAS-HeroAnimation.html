@@ -36,13 +36,13 @@
     background: var(--near-black);
   }
   /* Dark tint baked into the embed so it always matches the video bounds
-     (replaces the separate Wix overlay box). Sits below .overlay-wrapper. */
+     (replaces the separate Wix overlay box). Sits above everything, incl. .overlay-wrapper. */
   #stage::after {
     content: "";
     position: absolute;
     inset: 0;
     background: rgba(26,26,26,var(--tint, 0.55));
-    z-index: 5;
+    z-index: 20;
     pointer-events: none;
   }
   video {
