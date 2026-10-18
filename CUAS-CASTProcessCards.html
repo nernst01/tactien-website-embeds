@@ -20,7 +20,7 @@
   }
   #cast-process { width: 100%; background: #1A1A1A; font-family: 'Roboto', Arial, sans-serif; box-sizing: border-box; }
   #cast-process * { box-sizing: border-box; }
-  .cast-wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 64px; }
+  .cast-wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
   .node-row { display: flex; justify-content: space-between; position: relative; padding: 0 8px; }
   .node-line { position: absolute; top: 36px; left: 78px; right: 78px; height: 2px; background: rgba(200,151,90,0.35); z-index: 0; }
   .node-btn { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 14px; width: 220px; position: relative; z-index: 1; }
@@ -28,8 +28,9 @@
   .node-btn:focus-visible { outline: 2px solid #C8975A; outline-offset: 6px; border-radius: 8px; }
   .node-circle { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Almoni', 'Arial Black', sans-serif; font-size: 22px; border: 2px solid #C8975A; }
   .node-title { text-align: center; font-size: 14px; line-height: 1.35; }
-  .panels { margin-top: 44px; min-height: 260px; }
+  .panels { margin-top: 44px; min-height: 260px; display: flex; flex-direction: column; }
   .stage-card { background: #141414; border-top: 2px solid #C8975A; padding: 40px; width: 982px; max-width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px 24px; align-content: start; }
+  .stage-card { flex: 1 0 auto; }
   .stage-card > * { min-width: 0; }
   .stage-card h3 { margin: 0 0 18px; font-family: 'Almoni', 'Arial Black', sans-serif; color: #FFFFFF; font-size: 18px; }
   .stage-card ul { margin: 0; padding-left: 20px; color: #F0EFED; font-size: 15px; line-height: 1.85; }
@@ -71,13 +72,13 @@
   }
 
   @media (max-width: 760px) {
-    .cast-wrap { padding: 0 18px 48px; }
+    .cast-wrap { padding: 0 18px; }
     .stage-card { width: 100%; padding: 28px 24px; gap: 32px 20px; }
     .report-cover-frame { max-width: min(380px, 100%); }
   }
 
   @media (max-width: 640px) {
-    .cast-wrap { padding: 0 16px 40px; }
+    .cast-wrap { padding: 0 16px; }
     .node-row { flex-wrap: wrap; justify-content: center; row-gap: 24px; column-gap: 12px; padding: 0; }
     .node-line { display: none; }
     .node-btn { width: 44%; min-width: 128px; gap: 10px; }
