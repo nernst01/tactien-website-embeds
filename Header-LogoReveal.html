@@ -14,11 +14,13 @@
      the static logo. About 3 seconds, plays once, then stops drawing (no idle cost).
      Transparent background, so it sits on any header color.
 
-     SIZE THE EMBED to the whole header strip (full page width, header height), layered behind the menu.
-     The particles travel across that strip, so a wider strip gives a bigger sweep. The lockup itself is
-     always drawn at its real size, so one URL works on desktop and phone with no settings:
-       desktop:  lockup 508 x 139, 46 px from the left, centered top to bottom
-       phone:    lockup 256 x 82 (two line tagline), 26 px from the left, 6 px from the top. Used when the embed is under 400 px wide.
+     BEST: size the embed to the whole header strip (full page width, header height), layered behind the menu.
+     The particles travel across that strip, so a wider strip gives a bigger sweep. The lockup is drawn at its
+     real size, so one URL works on desktop and phone with no settings:
+       strip (embed at least lockup + 92 px wide):
+         desktop:  lockup 508 x 139, 46 px from the left, centered top to bottom
+         phone:    lockup 256 x 82 (two line tagline, used when the embed is under 400 px wide), 26 px from the left, 6 px from the top
+       logo sized embed (smaller than that): the lockup fills the embed, shrinking to fit, centered. The sweep is smaller.
      To nudge the position, add ?x=64&y=40 (px from the top left of the embed) to the URL.
      Only the lockup is a link (to the home page). The rest of the strip does nothing.
      Hover (or keyboard focus) on the lockup adds a faint warm halo and a soft light that follows the pointer.
@@ -69,11 +71,14 @@ function layout() {
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   variant = W < 400 ? 'B' : 'A';
   const L = LOCKUP[variant];
-  const phone = variant === 'B';
-  const x = Q.get('x') !== null ? Number(Q.get('x')) : (phone ? 26 : 46);
-  const s = Math.min(1, Math.max(0.2, (W - x) / L.w), H / L.h);       // real size unless the embed is too small
+  const phone = variant === 'B', m = phone ? 26 : 46;                  // left margin when the embed is a header strip
+  const strip = W >= L.w + 2 * m;                                      // wide enough to hold the lockup with room to spare
+  const xq = Q.get('x') !== null ? Number(Q.get('x')) : null, yq = Q.get('y') !== null ? Number(Q.get('y')) : null;
+  const room = xq !== null ? W - xq : (strip ? W - m : W);
+  const s = Math.min(1, Math.max(0.2, room / L.w), H / L.h);           // real size unless the embed is too small
   const w = L.w * s, h = L.h * s;
-  const y = Q.get('y') !== null ? Number(Q.get('y')) : (phone ? 6 : (H - h) / 2);
+  const x = xq !== null ? xq : (strip ? m : Math.max(0, (W - w) / 2));  // a lockup sized embed fills itself, a strip sits at the margin
+  const y = yq !== null ? yq : (strip && phone && H >= L.h + 40 ? 6 : (H - h) / 2);
   box = { x, y, w, h };
   link.style.left = x + 'px'; link.style.top = y + 'px'; link.style.width = w + 'px'; link.style.height = h + 'px';
   buildParticles();
