@@ -35,8 +35,11 @@
     --gold: #C8975A;
     --off-white: #E8DECD;
   }
-  html, body { margin: 0; height: 100%; background: #0a0a0a; overflow: hidden; }
-  body { font-family: Roboto, Arial, sans-serif; color: var(--off-white); -webkit-font-smoothing: antialiased; }
+  /* The embed must never take a swipe from the page: it cannot scroll, it lets vertical pans through, and on
+     phones and tablets it ignores touch entirely, so the page scrolls when a finger starts on the graphic. */
+  html, body { margin: 0; height: 100%; background: #0a0a0a; overflow: hidden; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  body { position: fixed; inset: 0; width: 100%; font-family: Roboto, Arial, sans-serif; color: var(--off-white); -webkit-font-smoothing: antialiased; }
+  @media (hover: none) and (pointer: coarse) { html, body, #stage, #stage canvas { pointer-events: none; } #ui { pointer-events: auto; } }
   #stage {
     position: fixed; inset: 0;
     background: radial-gradient(circle at var(--rx, 72%) var(--ry, 62%), rgba(200,151,90,.13) 0%, rgba(200,151,90,0) 44%), #0a0a0a;
@@ -584,20 +587,19 @@ addEventListener('keydown', (e) => { if (e.code === 'Space' && document.body.cla
 addEventListener('resize', () => { layout(); kick(); });
 document.addEventListener('visibilitychange', kick);
 
-// pointer: mouse and pen hover the pieces, a touch tap lifts one for a moment
+// pointer: hover only, and only on devices that hover. Phones and tablets get no touch listeners at all,
+// so a swipe that starts on the graphic always belongs to the page.
 const toGraphic = (e) => { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left - L.gx) / L.S, (e.clientY - r.top - L.gy) / L.S]; };
-let tapTimer = 0;
 function pointTo(e) { const [x, y] = toGraphic(e); if (!pointer.in) { pointer.sx = x; pointer.sy = y; } pointer.in = true; pointer.x = x; pointer.y = y; }
-stage.addEventListener('pointermove', (e) => { if (e.pointerType === 'touch') return; pointTo(e); kick(); });
-stage.addEventListener('pointerdown', (e) => {
-  if (e.pointerType !== 'touch') return;
-  pointTo(e); kick(); clearTimeout(tapTimer);
-  tapTimer = setTimeout(() => { pointer.in = false; kick(); }, 1400);
-});
-const leave = () => { pointer.in = false; kick(); };
-stage.addEventListener('pointerleave', leave);
-document.documentElement.addEventListener('mouseleave', leave);
-addEventListener('blur', leave);
+if (window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  const leave = () => { pointer.in = false; kick(); };
+  stage.addEventListener('pointermove', (e) => { if (e.pointerType === 'touch') return; pointTo(e); kick(); }, { passive: true });
+  stage.addEventListener('pointerleave', leave, { passive: true });
+  document.documentElement.addEventListener('mouseleave', leave, { passive: true });
+  addEventListener('blur', leave);
+}
+// the embed is never a scroller. If anything nudges it, put it back.
+addEventListener('scroll', () => { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); }, { passive: true });
 if ('IntersectionObserver' in window) new IntersectionObserver((es) => { onScreen = es[0].isIntersecting; if (onScreen) kick(); }).observe(stage);
 if (!playing) ui.play.textContent = 'Play';
 
