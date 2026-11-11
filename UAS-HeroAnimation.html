@@ -174,6 +174,11 @@
   }
 
   @media (max-width: 640px) {
+    /* The phone frame is shorter than 480px; a taller stage pushes the scene below center and crops it. */
+    .hero-stage {
+      min-height: 0;
+    }
+
     .scene-frame {
       width: 96vw;
     }
