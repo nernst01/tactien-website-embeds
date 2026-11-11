@@ -22,8 +22,10 @@
     background: var(--near-black);
     overflow: hidden;
     overscroll-behavior: none;
-    touch-action: none;
+    touch-action: pan-y;
   }
+  /* The embed must never take a swipe from the page: on phones and tablets it ignores touch entirely. */
+  @media (hover: none) and (pointer: coarse) { html, body, #stage, video { pointer-events: none; } }
   #stage {
     position: relative;
     width: 100%;
@@ -52,12 +54,16 @@
     webkit-playsinline="true"
     referrerpolicy="unsafe-url"
     poster="https://static.wixstatic.com/media/f27dcb_42681bcab03a4467b45ebd01d17157b0f001.jpg"
-    src="https://video.wixstatic.com/video/f27dcb_42681bcab03a4467b45ebd01d17157b0/1080p/mp4/file.mp4"
   ></video>
 </div>
 
 <script>
-document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+// The embed never shows wider than about 800 px, so 1080p (16 MB) is wasted. 720p is 7.6 MB, 480p is 3.9 MB.
+(function () {
+  var v = document.querySelector('video');
+  var q = window.innerWidth < 500 ? '480p' : '720p';
+  v.src = 'https://video.wixstatic.com/video/f27dcb_42681bcab03a4467b45ebd01d17157b0/' + q + '/mp4/file.mp4';
+})();
 </script>
 
 </body>
