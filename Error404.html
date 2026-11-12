@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex" />
+<meta name="googlebot" content="noindex, indexifembedded" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page not found | The Tactien Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: "Almoni"; src: url("fonts/Almoni-UltraBold.ttf") format("truetype"); font-weight: 800 900; font-display: swap; }
+  :root { --gold: #C8975A; --gray: #727272; --black: #000000; --off-white: #F0EFED; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--black); color: #fff; font-family: 'Roboto', Arial, sans-serif; }
+  body { display: flex; flex-direction: column; min-height: 100vh; position: relative; overflow-x: hidden; }
+  /* Gold lighting: a soft glow behind the 404 and a faint wash from the top corner */
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 55% 42% at 50% 44%, rgba(200,151,90,.16), rgba(200,151,90,.05) 45%, transparent 72%),
+      radial-gradient(ellipse 60% 50% at 0% 0%, rgba(200,151,90,.10), transparent 65%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(200,151,90,.06), transparent 70%); }
+  header, main, footer { position: relative; z-index: 1; }
+
+  header { padding: 20px 32px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  header iframe { width: 316px; height: 93px; border: 0; display: block; }
+
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+  .wrap { width: 100%; max-width: 760px; text-align: center; }
+
+  .code { font-family: 'Almoni', 'Arial Black', sans-serif; font-weight: 900; font-size: clamp(96px, 22vw, 200px); line-height: .9; letter-spacing: .02em; color: transparent; -webkit-text-stroke: 2px var(--gold); margin: 0; }
+  .rule { width: 72px; height: 3px; background: var(--gold); margin: 28px auto; }
+  h1 { font-family: 'Almoni', 'Arial Black', sans-serif; font-weight: 900; text-transform: uppercase; font-size: clamp(28px, 6vw, 44px); letter-spacing: .02em; margin: 0 0 14px; }
+  p { font-weight: 300; font-size: clamp(16px, 2.4vw, 19px); line-height: 1.5; color: var(--off-white); margin: 0 auto 36px; max-width: 460px; }
+
+  nav { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  nav a { flex: 0 1 150px; padding: 14px 18px; border: 1px solid var(--gold); color: var(--gold); text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; transition: background .2s ease, color .2s ease, border-color .2s ease; }
+  nav a:hover, nav a:focus-visible { background: #fff; border-color: #fff; color: #000; }
+  nav a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  footer { padding: 20px 24px; text-align: center; font-weight: 100; font-size: 13px; color: rgba(255,255,255,.7); border-top: 1px solid rgba(255,255,255,.08); }
+
+  @media (max-width: 480px) {
+    header { padding: 12px 16px; }
+    header iframe { width: 240px; height: 71px; }
+    nav a { flex: 1 1 40%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <iframe src="Header-LogoReveal.html" title="The Tactien Group" scrolling="no"></iframe>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="code" aria-hidden="true">404</div>
+    <div class="rule"></div>
+    <h1>Waypoint Not Found.</h1>
+    <p>This page is outside controlled airspace. Return to LZ.</p>
+    <nav aria-label="Site sections">
+      <a target="_top" href="https://www.tactiengroup.com/">Home</a>
+      <a target="_top" href="https://www.tactiengroup.com/uas">UAS</a>
+      <a target="_top" href="https://www.tactiengroup.com/cuas">CUAS</a>
+      <a target="_top" href="https://www.tactiengroup.com/contact">Contact</a>
+    </nav>
+  </div>
+</main>
+
+<footer>© 2026 The Tactien Group, LLC</footer>
+
+</body>
+</html>
